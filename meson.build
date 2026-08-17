@@ -53,6 +53,7 @@ executable('openos-compositor',
             xdg_code, layer_code, layer_srv, ws_code, ws_srv],
   dependencies: [wlroots, wayland_server, xkb, pixman, libinput, math],
   include_directories: inc,
+  c_args: ['-DWLR_USE_UNSTABLE'],
   install: true)
 
 # 面板 layer 层 (LayerShellQt, KDE) — 可选; 缺失时面板保持普通置顶窗口
