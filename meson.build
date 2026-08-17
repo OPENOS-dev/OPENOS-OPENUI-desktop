@@ -19,6 +19,10 @@ qt6_dep  = dependency('qt6', modules: ['Core', 'Gui', 'Quick', 'Qml', 'WaylandCl
 
 inc = include_directories('src')
 
+# wayland-scanner 生成的协议头 (如 xdg-shell-protocol.h) 位于 build 目录,
+# compositor 用尖括号 include, 需显式加入 include 路径
+protocol_inc = include_directories(meson.current_build_dir())
+
 wl_proto_dir = wayland_protos.get_variable(pkgconfig: 'pkgdatadir')
 wayland_scanner = find_program('wayland-scanner')
 
@@ -52,7 +56,7 @@ executable('openos-compositor',
   sources: ['src/compositor.c', 'src/blur.c', 'src/workspace.c',
             xdg_code, layer_code, layer_srv, ws_code, ws_srv],
   dependencies: [wlroots, wayland_server, xkb, pixman, libinput, math],
-  include_directories: inc,
+  include_directories: [inc, protocol_inc],
   c_args: ['-DWLR_USE_UNSTABLE'],
   install: true)
 
