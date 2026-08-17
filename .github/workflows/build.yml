@@ -61,9 +61,10 @@ jobs:
             loong64)TARGET=loongarch64-openos-linux-gnu; CROSS=loongarch64-linux-gnu- ;;
           esac
           export TARGET CROSS
-          WORK="$(mktemp -d)"
+          WORK="$RUNNER_TEMP/${COMPONENT}-${ARCH}-build"
+          rm -rf "$WORK"; mkdir -p "$WORK"
           PKG="$WORK/${COMPONENT}-${ARCH}-DEV2026.1.pkg.tar.zst"
-                    meson setup "$WORK/build" --prefix=/usr -Dbuildtype=release
+          meson setup "$WORK/build" --prefix=/usr -Dbuildtype=release
           meson compile -C "$WORK/build"
           DESTDIR="$WORK/pkg" meson install -C "$WORK/build"
           # 打包
@@ -81,12 +82,14 @@ jobs:
             exit 0
           fi
           ARCH="${{ matrix.arch }}"
+          # 重新定义 WORK/PKG (step 间 shell 不共享变量)
+          WORK="$RUNNER_TEMP/${COMPONENT}-${ARCH}-build"
           PKG="$WORK/${COMPONENT}-${ARCH}-DEV2026.1.pkg.tar.zst"
           rm -rf /tmp/binpkg-repo
           git clone --depth 1 "https://x-access-token:${BINPKG_TOKEN}@github.com/${BINPKG_REPO}.git" /tmp/binpkg-repo
           cd /tmp/binpkg-repo
           mkdir -p "bins/${COMPONENT}/${ARCH}"
-          cp -f "$GITHUB_WORKSPACE/${PKG}" "bins/${COMPONENT}/${ARCH}/"
+          cp -f "$PKG" "bins/${COMPONENT}/${ARCH}/"
           # 构建成功: 删除对应的失败日志, 避免 failure-report 重复创建 Issue
           rm -f "logs/${COMPONENT}/$ARCH.log"
           git config user.name "OPENOS CI"
