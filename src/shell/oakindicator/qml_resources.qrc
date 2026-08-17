@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/oak">
+        <file>OAKState.qml</file>
+    </qresource>
+</RCC>

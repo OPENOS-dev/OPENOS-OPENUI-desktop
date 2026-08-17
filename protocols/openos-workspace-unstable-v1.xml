@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="openos_workspace_unstable_v1">
+  <copyright>
+    OPENOS 自研协议 — 工作区管理 (供工作区切换器 UI 使用)
+    Copyright © 2026 OPENOS Project
+
+    本协议为 OPENOS 桌面环境专用, 用于让面板等客户端列出工作区并请求切换。
+  </copyright>
+
+  <interface name="openos_workspace_manager_v1" version="1">
+    <description summary="list and control OPENOS workspaces">
+      客户端绑定后, 合成器为每个工作区发送一个 workspace 事件 (new_id),
+      随后跟随 name / state / done 事件描述该工作区。
+    </description>
+
+    <event name="workspace">
+      <description summary="a workspace has been created">
+        Emitted for every workspace when the client binds the manager.
+        The workspace is described by subsequent events.
+      </description>
+      <arg name="workspace" type="new_id" interface="openos_workspace_handle_v1"/>
+    </event>
+
+    <request name="stop">
+      <description summary="stop sending events"/>
+    </request>
+
+    <event name="finished" type="destructor">
+      <description summary="the manager is finished"/>
+    </event>
+  </interface>
+
+  <interface name="openos_workspace_handle_v1" version="1">
+    <description summary="an OPENOS workspace">
+      Represents one workspace. The client can request to activate it.
+    </description>
+
+    <event name="name">
+      <arg name="name" type="string"/>
+    </event>
+
+    <event name="state">
+      <arg name="state" type="array"/>
+    </event>
+
+    <event name="done">
+      <description summary="all workspace info has been sent"/>
+    </event>
+
+    <request name="activate">
+      <description summary="request that this workspace be activated"/>
+    </request>
+
+    <enum name="state">
+      <entry name="active" value="0" summary="the workspace is active"/>
+    </enum>
+  </interface>
+</protocol>

@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file>main.qml</file>
+        <file>Panel.qml</file>
+        <file>Launcher.qml</file>
+        <file>Notifications.qml</file>
+        <file>OpenUI.qml</file>
+        <file>Tray.qml</file>
+        <file>QuickSettings.qml</file>
+        <file>PowerMenu.qml</file>
+        <file>LockScreen.qml</file>
+        <file>CommandPalette.qml</file>
+        <file>CalendarPopup.qml</file>
+        <file>AltTabSwitcher.qml</file>
+        <file>RunDialog.qml</file>
+        <file>SettingsCenter.qml</file>
+        <file>SettingsPages.qml</file>
+        <file>OptManagerUI.qml</file>
+        <file>VmappManager.qml</file>
+        <file>WelcomeScreen.qml</file>
+        <file>ThemeCustomizer.qml</file>
+    </qresource>
+</RCC>
