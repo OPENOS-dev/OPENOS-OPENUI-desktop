@@ -42,8 +42,9 @@
     - 管理层：`SettingsCenter.qml` + `SettingsPages.qml`（设置中心含 OAK 安全页/
       opt 包管理/隔离管理）、`OptManagerUI.qml`（opt 图形前端）、
       `VmappManager.qml`（软件隔离管理）、`ThemeCustomizer.qml`（主题自定义）
-    - `Launcher.qml`（**应用抽屉**：vmapp `.desktop`，搜索+分组）、
-      `Notifications.qml`（通知）、`OpenUI.qml`（设计令牌）
+    - `Notifications.qml`（通知）、`OpenUI.qml`（设计令牌）
+    - 启动器（Win10 开始菜单风格：pacman 系统应用 + vmapp 隔离应用）已迁移到独立
+      应用 `openos-run`（`OPENOS-run` 仓库），由面板 Menu 按钮 `shell.launchApp("openos-run")` 调起
   - 快捷键：`Ctrl+K` 命令面板 / `Alt+F2` 运行 / `Ctrl+L` 锁屏 / `Alt+Tab` 切换 /
     `Ctrl+T` 主题 / `Ctrl+S` 设置 / `Ctrl+P` opt / `Ctrl+V` 隔离管理
   - `AppsModel`（`shellbackend.h`）：应用条目模型（name/exec/vmapp），
