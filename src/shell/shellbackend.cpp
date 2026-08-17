@@ -36,8 +36,11 @@ void ShellBackend::launchApp(const QString& command) {
     p->start("/bin/sh", QStringList() << "-c" << command);
 }
 
-/* 扫描 .desktop 目录, 解析 Name/Exec, 加入 apps 模型 */
-void ShellBackend::scanDesktopDir(const QString& dir, const QString& vmapp) {
+/* 扫描 .desktop 目录, 解析 Name/Exec/Icon, 加入 apps 模型
+ * source: "system" = pacman/系统安装; "vmapp" = 隔离环境
+ * 跳过 NoDisplay/Hidden 条目, 同名同 exec 去重 */
+void ShellBackend::scanDesktopDir(const QString& dir, const QString& vmapp,
+                                  const QString& source) {
     QDir d(dir);
     if (!d.exists()) return;
     const QFileInfoList entries = d.entryInfoList(QStringList() << "*.desktop",
@@ -45,37 +48,54 @@ void ShellBackend::scanDesktopDir(const QString& dir, const QString& vmapp) {
     for (const QFileInfo& fi : entries) {
         QFile f(fi.absoluteFilePath());
         if (!f.open(QIODevice::ReadOnly)) continue;
-        QString name, exec;
+        QString name, exec, icon;
+        bool hide = false;
+        bool inDesktop = false;
         while (!f.atEnd()) {
             const QString line = QString::fromUtf8(f.readLine()).trimmed();
-            if (line.startsWith(QStringLiteral("Name=")))
-                name = line.mid(5);
-            else if (line.startsWith(QStringLiteral("Exec=")))
-                exec = line.mid(5);
-            if (!name.isEmpty() && !exec.isEmpty()) break;
+            if (line == QLatin1String("[Desktop Entry]")) inDesktop = true;
+            else if (line.startsWith(QLatin1Char('[')) && !line.startsWith(QLatin1String("[Desktop Entry]")))
+                inDesktop = false;   /* 跳过 Action=/其他段 */
+            if (!inDesktop) continue;
+            if (line.startsWith(QLatin1String("Name="))) name = line.mid(5);
+            else if (line.startsWith(QLatin1String("Exec="))) exec = line.mid(5);
+            else if (line.startsWith(QLatin1String("Icon="))) icon = line.mid(5);
+            else if (line.startsWith(QLatin1String("NoDisplay=")) && line.mid(10).startsWith(QLatin1Char('t'))) hide = true;
+            else if (line.startsWith(QLatin1String("Hidden=")) && line.mid(7).startsWith(QLatin1Char('t'))) hide = true;
         }
-        if (!name.isEmpty() && !exec.isEmpty())
-            m_apps->add({name, exec, vmapp});
+        if (hide) continue;
+        if (name.isEmpty() || exec.isEmpty()) continue;
+        /* 去重: 同源同名同 exec 跳过 */
+        for (const AppInfo& a : m_apps->items()) {
+            if (a.source == source && a.name == name && a.exec == exec) { hide = true; break; }
+        }
+        if (hide) continue;
+        /* 字母分组 (Win10 "所有应用" 首字母分界) */
+        QChar c = name.at(0).toUpper();
+        QString group = c.isLetter() ? QString(c) : QStringLiteral("#");
+        m_apps->add({name, exec, vmapp, source, icon, group});
     }
 }
 
-/* 应用抽屉: 扫描 vmapp 各环境 + 宿主桌面 .desktop */
+/* 应用抽屉: 扫描 vmapp 各隔离环境 + 宿主系统 .desktop (pacman 安装) */
 void ShellBackend::refreshApps() {
     m_apps->clear();
 
-    /* 宿主系统 .desktop (非隔离) */
-    scanDesktopDir(QStringLiteral("/usr/share/applications"), QString());
-    scanDesktopDir(QStringLiteral("/usr/local/share/applications"), QString());
+    /* 宿主系统 .desktop — pacman 安装的软件写入此处 */
+    scanDesktopDir(QStringLiteral("/usr/share/applications"),
+                   QString(), QStringLiteral("system"));
+    scanDesktopDir(QStringLiteral("/usr/local/share/applications"),
+                   QString(), QStringLiteral("system"));
 
-    /* vmapp 隔离环境: 经 vmappapi 列出 /vmapp/<app>/usr/share/applications
-     * 生产: 调 libvmapp 枚举 /vmapp 各子目录; 原型枚举常见目录 */
+    /* vmapp 隔离环境: 经 libvmapp 枚举 /vmapp 各子目录。
+     * 生产: 调 libvmapp 列出; 原型枚举常见目录 */
     const QStringList vmapps = {
         QStringLiteral("opt"), QStringLiteral("firefox"), QStringLiteral("code")
     };
     for (const QString& app : vmapps) {
         const QString p = QStringLiteral("/vmapp/%1/usr/share/applications")
                               .arg(app);
-        scanDesktopDir(p, app);
+        scanDesktopDir(p, app, QStringLiteral("vmapp"));
     }
 }
 

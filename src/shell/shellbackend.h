@@ -11,7 +11,11 @@
 #include <QVector>
 
 struct ToplevelInfo { QString title; QString appId; bool active; };
-struct AppInfo { QString name; QString exec; QString vmapp; };   /* 应用抽屉条目 */
+struct AppInfo { QString name; QString exec; QString vmapp; QString source; QString icon; QString group; };
+/* 应用抽屉条目:
+ *   source = "system"  -> pacman / 系统安装 (宿主 /usr/share/applications)
+ *   source = "vmapp"   -> 隔离环境 (/vmapp/<app>/usr/share/applications)
+ */
 struct WorkspaceInfo { QString name; bool active; };
 struct NotificationInfo { QString title; QString body; };
 
@@ -122,7 +126,7 @@ private:
 class AppsModel : public QAbstractListModel {
     Q_OBJECT
 public:
-    enum Role { NameRole = Qt::UserRole + 1, ExecRole, VmappRole };
+    enum Role { NameRole = Qt::UserRole + 1, ExecRole, VmappRole, SourceRole, IconRole, GroupRole };
     int rowCount(const QModelIndex&) const override { return m_items.size(); }
     QVariant data(const QModelIndex& idx, int role) const override {
         if (idx.row() < 0 || idx.row() >= m_items.size()) return {};
@@ -131,11 +135,15 @@ public:
         case NameRole:  return a.name;
         case ExecRole:  return a.exec;
         case VmappRole: return a.vmapp;
+        case SourceRole: return a.source;
+        case IconRole:  return a.icon;
+        case GroupRole: return a.group;
         }
         return {};
     }
     QHash<int, QByteArray> roleNames() const override {
-        return { {NameRole, "name"}, {ExecRole, "exec"}, {VmappRole, "vmapp"} };
+        return { {NameRole, "name"}, {ExecRole, "exec"}, {VmappRole, "vmapp"},
+                 {SourceRole, "source"}, {IconRole, "icon"}, {GroupRole, "group"} };
     }
     void clear() {
         if (!m_items.isEmpty()) {
@@ -147,6 +155,7 @@ public:
         m_items.append(a); endInsertRows();
     }
     int count() const { return m_items.size(); }
+    const QVector<AppInfo>& items() const { return m_items; }
 private:
     QVector<AppInfo> m_items;
 };

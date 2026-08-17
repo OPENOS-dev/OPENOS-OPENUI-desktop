@@ -193,12 +193,10 @@ Rectangle {
                 id: menuHover
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: launcher.visible = !launcher.visible
+                onClicked: shell.launchApp("openos-run")   // 启动器在 openos-run 应用内实现
             }
         }
     }
-
-    Launcher { id: launcher; parent: panel }
 
     // 快捷设置弹出 (托盘触发, 定位面板右下方)
     QuickSettings {
