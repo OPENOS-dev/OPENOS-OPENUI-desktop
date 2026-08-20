@@ -51,11 +51,10 @@ Rectangle {
             width: 80; height: 80; radius: 40
             color: Qt.rgba(OpenUI.primary.r, OpenUI.primary.g,
                           OpenUI.primary.b, 0.2)
-            Text {
-                anchors.centerIn: parent
-                text: "\u263A"
-                color: OpenUI.primary; font.pixelSize: 36
-            }
+            ThemedIcon {
+                    anchors.centerIn: parent
+                    name: "user-online"; ctx: "Status"; size: 36; color: OpenUI.primary
+                }
         }
 
         // 用户名
@@ -151,10 +150,12 @@ Rectangle {
         Rectangle {
             width: 120; height: 34; radius: OpenUI.shapeXs
             color: "transparent"
-            Text {
-                anchors.centerIn: parent
-                text: "\u21BB 切换用户"
-                color: OpenUI.onSurfaceVariant; font.pixelSize: 12
+            Row {
+                anchors.centerIn: parent; spacing: 6
+                ThemedIcon { name: "system-reboot"; ctx: "Actions"; size: 14; color: OpenUI.onSurfaceVariant
+                             anchors.verticalCenter: parent.verticalCenter }
+                Text { text: "切换用户"; color: OpenUI.onSurfaceVariant; font.pixelSize: 12
+                       anchors.verticalCenter: parent.verticalCenter }
             }
             MouseArea {
                 anchors.fill: parent; hoverEnabled: true
@@ -168,10 +169,12 @@ Rectangle {
         Rectangle {
             width: 120; height: 34; radius: OpenUI.shapeXs
             color: "transparent"
-            Text {
-                anchors.centerIn: parent
-                text: "\u23FB 关机"
-                color: OpenUI.onSurfaceVariant; font.pixelSize: 12
+            Row {
+                anchors.centerIn: parent; spacing: 6
+                ThemedIcon { name: "system-power"; ctx: "Actions"; size: 14; color: OpenUI.onSurfaceVariant
+                             anchors.verticalCenter: parent.verticalCenter }
+                Text { text: "关机"; color: OpenUI.onSurfaceVariant; font.pixelSize: 12
+                       anchors.verticalCenter: parent.verticalCenter }
             }
             MouseArea {
                 anchors.fill: parent; hoverEnabled: true

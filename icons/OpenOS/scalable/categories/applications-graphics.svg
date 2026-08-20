@@ -1,1 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="16" cy="9" r="1.5" fill="currentColor"/><circle cx="17" cy="15" r="1.5" fill="currentColor"/><circle cx="11" cy="17" r="1.5" fill="currentColor"/></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 24 24"
+   fill="none"
+   stroke="currentColor"
+   stroke-width="1.5"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="applications-graphics.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs5" />
+  <sodipodi:namedview
+     id="namedview5"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="4.4591429"
+     inkscape:cx="20.071122"
+     inkscape:cy="22.313705"
+     inkscape:window-width="1394"
+     inkscape:window-height="730"
+     inkscape:window-x="122"
+     inkscape:window-y="177"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg5" />
+  <circle
+     cx="12"
+     cy="12"
+     r="9"
+     id="circle1" />
+  <circle
+     cx="7.3272252"
+     cy="11.915133"
+     r="1.5"
+     fill="currentColor"
+     id="circle2" />
+  <circle
+     cx="11.963349"
+     cy="7.1787086"
+     r="1.5"
+     fill="currentColor"
+     id="circle3" />
+  <circle
+     cx="16.397034"
+     cy="11.963349"
+     fill="currentColor"
+     id="circle4"
+     r="1.5" />
+  <circle
+     cx="11.820875"
+     cy="16.527517"
+     fill="currentColor"
+     id="circle5"
+     r="1.5" />
+</svg>

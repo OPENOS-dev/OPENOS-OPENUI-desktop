@@ -15,6 +15,8 @@
 #include <QtGlobal>
 #include "shellbackend.h"
 #include "waylandbridge.h"
+#include "iconloader.h"
+#include "iconprovider.h"
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
@@ -27,6 +29,16 @@ int main(int argc, char* argv[]) {
     bridge.init();   // 绑定合成器协议 (骨架: 待 Linux 接入)
 
     QQmlApplicationEngine engine;
+
+    /* SVG 图标 provider: image://icons/<path>?size=&color=
+     * 由 IconLoader.url() 生成, IconProvider 渲染 + 着色 */
+    engine.addImageProvider(QStringLiteral("icons"), new IconProvider);
+
+    /* IconLoader 作为 context property 注入:
+     * OpenUI.icon.url(...) / OpenUI.icon.resolve(...) */
+    IconLoader iconLoader(&app);
+    engine.rootContext()->setContextProperty("_iconLoader", &iconLoader);
+
     engine.rootContext()->setContextProperty("shell", &backend);
     engine.rootContext()->setContextProperty("wayland", &bridge);
 

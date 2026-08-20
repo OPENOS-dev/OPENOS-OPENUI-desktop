@@ -10,7 +10,7 @@
    stroke-linejoin="round"
    version="1.1"
    id="svg2"
-   sodipodi:docname="battery-good.svg"
+   sodipodi:docname="cpu.svg"
    inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -27,32 +27,27 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="1"
      inkscape:deskcolor="#505050"
-     inkscape:zoom="12.291646"
-     inkscape:cx="12.813581"
-     inkscape:cy="14.27799"
-     inkscape:window-width="1500"
-     inkscape:window-height="830"
-     inkscape:window-x="262"
-     inkscape:window-y="219"
+     inkscape:zoom="8.4030833"
+     inkscape:cx="20.766187"
+     inkscape:cy="7.1402362"
+     inkscape:window-width="1562"
+     inkscape:window-height="835"
+     inkscape:window-x="114"
+     inkscape:window-y="103"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" />
   <rect
-     x="3"
-     y="8"
-     width="16"
-     height="8"
+     x="6"
+     y="6"
+     width="12"
+     height="12"
      rx="1"
      id="rect1" />
   <path
-     d="m 21,11 v 2"
+     d="M9 9h6v6H9z"
      id="path1" />
-  <rect
-     x="5"
-     y="10"
-     width="6.8237352"
-     height="4"
-     fill="currentColor"
-     stroke="none"
-     id="rect2"
-     style="stroke-width:2.26226" />
+  <path
+     d="M 9,2 V 5 M 15,2 V 5 M 9,19 v 3 m 6,-3 v 3 M 2,9 H 5 M 2,15 H 5 M 19,9 h 3 m -3,6 h 3 M 2,12 h 3 m 14,0 h 3 M 12,2 v 3 m 0,14 v 3"
+     id="path2"
+     sodipodi:nodetypes="cccccccccccccccccccccccc" />
 </svg>

@@ -38,15 +38,14 @@ Rectangle {
             }
             Item { width: parent.width - 90; height: 1 }
             Repeater {
-                model: ["\u2039", "\u203A"]
+                model: ["chevron-left", "chevron-right"]
                 Rectangle {
                     width: 26; height: 26; radius: OpenUI.shapeXs
                     color: hover.hovered
                            ? Qt.rgba(OpenUI.onSurface.r, OpenUI.onSurface.g,
                                      OpenUI.onSurface.b, OpenUI.hoverAlpha)
                            : "transparent"
-                    Text { anchors.centerIn: parent; text: modelData
-                           color: OpenUI.onSurfaceVariant; font.pixelSize: 16 }
+                    ThemedIcon { anchors.centerIn: parent; name: modelData; ctx: "Navigation"; size: 16; color: OpenUI.onSurfaceVariant }
                     MouseArea {
                         id: hover; anchors.fill: parent; hoverEnabled: true
                         onClicked: {

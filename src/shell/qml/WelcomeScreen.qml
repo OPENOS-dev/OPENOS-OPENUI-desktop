@@ -77,12 +77,21 @@ Rectangle {
                                         OpenUI.statusSuccess.b, 0.15)
                                : Qt.rgba(OpenUI.statusWarning.r, OpenUI.statusWarning.g,
                                         OpenUI.statusWarning.b, 0.15)
-                        Text {
-                            id: oakStatus
-                            anchors.centerIn: parent
-                            text: welcome.oakReady ? "\u2713 OAK 安全已启用" : "\u25D2 OAK 安全初始化中..."
-                            color: welcome.oakReady ? OpenUI.statusSuccess : OpenUI.statusWarning
-                            font.pixelSize: 12
+                        Row {
+                            anchors.centerIn: parent; spacing: 4
+                            ThemedIcon {
+                                name: welcome.oakReady ? "task-complete" : "task-progress"
+                                ctx: "Status"; size: 12
+                                color: welcome.oakReady ? OpenUI.statusSuccess : OpenUI.statusWarning
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                id: oakStatus
+                                text: welcome.oakReady ? "OAK 安全已启用" : "OAK 安全初始化中..."
+                                color: welcome.oakReady ? OpenUI.statusSuccess : OpenUI.statusWarning
+                                font.pixelSize: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
                     }
 
@@ -94,12 +103,21 @@ Rectangle {
                                         OpenUI.statusSuccess.b, 0.15)
                                : Qt.rgba(OpenUI.statusWarning.r, OpenUI.statusWarning.g,
                                         OpenUI.statusWarning.b, 0.15)
-                        Text {
-                            id: optStatus
-                            anchors.centerIn: parent
-                            text: welcome.optReady ? "\u2713 opt 已就绪" : "\u25D2 opt 初始化中..."
-                            color: welcome.optReady ? OpenUI.statusSuccess : OpenUI.statusWarning
-                            font.pixelSize: 12
+                        Row {
+                            anchors.centerIn: parent; spacing: 4
+                            ThemedIcon {
+                                name: welcome.optReady ? "task-complete" : "task-progress"
+                                ctx: "Status"; size: 12
+                                color: welcome.optReady ? OpenUI.statusSuccess : OpenUI.statusWarning
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                id: optStatus
+                                text: welcome.optReady ? "opt 已就绪" : "opt 初始化中..."
+                                color: welcome.optReady ? OpenUI.statusSuccess : OpenUI.statusWarning
+                                font.pixelSize: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
                     }
                 }

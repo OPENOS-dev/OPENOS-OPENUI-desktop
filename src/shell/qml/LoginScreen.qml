@@ -17,7 +17,7 @@ Rectangle {
 
     // 用户列表模型
     property var users: [
-        { name: "USER", icon: "\u263A", type: "本地" }
+        { name: "USER", type: "本地" }
     ]
 
     property int selectedUser: 0
@@ -49,10 +49,9 @@ Rectangle {
                        ? Qt.rgba(OpenUI.onSurface.r, OpenUI.onSurface.g,
                                 OpenUI.onSurface.b, 0.1)
                        : "transparent"
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: "\u25C0"; color: OpenUI.onSurfaceVariant
-                    font.pixelSize: 18
+                    name: "go-previous"; ctx: "Navigation"; size: 18; color: OpenUI.onSurfaceVariant
                 }
                 MouseArea {
                     id: leftHover; anchors.fill: parent; hoverEnabled: true
@@ -68,10 +67,9 @@ Rectangle {
                 color: Qt.rgba(OpenUI.primary.r, OpenUI.primary.g,
                               OpenUI.primary.b, 0.2)
                 border.color: OpenUI.primary; border.width: 2
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: users[selectedUser].icon
-                    color: OpenUI.primary; font.pixelSize: 42
+                    name: "user-online"; ctx: "Status"; size: 42; color: OpenUI.primary
                 }
             }
 
@@ -83,10 +81,9 @@ Rectangle {
                        ? Qt.rgba(OpenUI.onSurface.r, OpenUI.onSurface.g,
                                 OpenUI.onSurface.b, 0.1)
                        : "transparent"
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: "\u25B6"; color: OpenUI.onSurfaceVariant
-                    font.pixelSize: 18
+                    name: "go-next"; ctx: "Navigation"; size: 18; color: OpenUI.onSurfaceVariant
                 }
                 MouseArea {
                     id: rightHover; anchors.fill: parent; hoverEnabled: true

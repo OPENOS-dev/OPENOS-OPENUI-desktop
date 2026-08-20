@@ -79,9 +79,9 @@ Window {
                 anchors.fill: parent; anchors.topMargin: OpenUI.sp4
                 Repeater {
                     model: ListModel {
-                        ListElement { icon: "\u2699"; label: "进程" }
-                        ListElement { icon: "\u25C9"; label: "CPU/内存" }
-                        ListElement { icon: "\u25A3"; label: "磁盘" }
+                        ListElement { icon: "preferences-system"; label: "进程" }
+                        ListElement { icon: "cpu"; label: "CPU/内存" }
+                        ListElement { icon: "drive-harddisk"; label: "磁盘" }
                     }
                     Rectangle {
                         width: 160; height: 40; radius: OpenUI.shapeXs
@@ -95,11 +95,10 @@ Window {
                         Row {
                             anchors.fill: parent; anchors.leftMargin: OpenUI.sp4
                             spacing: OpenUI.sp2
-                            Text {
+                            ThemedIcon {
                                 width: 24; height: parent.height
-                                verticalAlignment: Text.AlignVCenter
-                                text: model.icon; color: OpenUI.primary
-                                font.pixelSize: 15
+                                name: model.icon; ctx: "Apps"; size: 16; color: OpenUI.primary
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                             Text {
                                 height: parent.height
@@ -262,10 +261,9 @@ Window {
                                                 anchors.left: parent.left; anchors.leftMargin: OpenUI.sp2
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 spacing: OpenUI.sp1
-                                                Text {
+                                                ThemedIcon {
                                                     anchors.verticalCenter: parent.verticalCenter
-                                                    text: "\u2699"; color: OpenUI.primary
-                                                    font.pixelSize: 12
+                                                    name: "preferences-system"; ctx: "Apps"; size: 12; color: OpenUI.primary
                                                 }
                                                 Text {
                                                     anchors.verticalCenter: parent.verticalCenter
@@ -494,10 +492,9 @@ Window {
             color: closeHover.hovered
                    ? Qt.rgba(OpenUI.error.r, OpenUI.error.g, OpenUI.error.b, 0.3)
                    : "transparent"
-            Text {
+            ThemedIcon {
                 anchors.centerIn: parent
-                text: "\u2715"; color: OpenUI.onSurface
-                font.pixelSize: 14
+                name: "window-close"; ctx: "Actions"; size: 14; color: OpenUI.onSurface
             }
             MouseArea {
                 id: closeHover; anchors.fill: parent; hoverEnabled: true

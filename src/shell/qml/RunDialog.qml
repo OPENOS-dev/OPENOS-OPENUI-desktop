@@ -31,7 +31,7 @@ Rectangle {
         Text { text: "运行"; color: OpenUI.onSurfaceVariant;
                font.pixelSize: OpenUI.typeLabelM }
         Row { width: parent.width; spacing: OpenUI.sp2
-            Text { text: "\u2192"; color: OpenUI.primary; font.pixelSize: 16; width: 20 }
+            ThemedIcon { name: "arrow-right"; ctx: "Navigation"; size: 16; color: OpenUI.primary; width: 20 }
             TextField {
                 id: input
                 width: parent.width - 20; height: 32

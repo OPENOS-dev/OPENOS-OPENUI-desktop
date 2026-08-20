@@ -27,14 +27,16 @@ Window {
 
             // 标题栏
             Row { width: parent.width; spacing: OpenUI.sp2
-                Text { text: "\u270E " + fileName; color: OpenUI.onSurface
+                ThemedIcon { name: "document-edit"; ctx: "Actions"; size: 16; color: OpenUI.onSurface
+                             anchors.verticalCenter: parent.verticalCenter }
+                Text { text: fileName; color: OpenUI.onSurface
                        font.pixelSize: OpenUI.typeTitle; font.bold: true
                        verticalAlignment: Text.AlignVCenter }
                 Item { width: parent.width - 190; height: 1 }
                 Rectangle {
                     width: 24; height: 24; radius: OpenUI.shapeXs
                     color: searchHover.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,OpenUI.hoverAlpha) : "transparent"
-                    Text { anchors.centerIn: parent; text: "\u2315"; color: OpenUI.onSurfaceVariant; font.pixelSize: 14 }
+                    ThemedIcon { anchors.centerIn: parent; name: "edit-find"; ctx: "Actions"; size: 14; color: OpenUI.onSurfaceVariant }
                     MouseArea { id: searchHover; anchors.fill: parent; hoverEnabled: true
                         onClicked: searchBar.visible = !searchBar.visible }
                 }

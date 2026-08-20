@@ -36,7 +36,7 @@ Rectangle {
 
         // 音量
         Row { spacing: OpenUI.sp2; width: parent.width
-            Text { text: "\u266A"; color: OpenUI.onSurfaceVariant; width: 20 }
+            ThemedIcon { name: "audio-volume-high"; ctx: "Panel"; size: 16; color: OpenUI.onSurfaceVariant }
             Slider {
                 width: parent.width - 40; height: 24
                 from: 0; to: 100; value: 70
@@ -45,7 +45,7 @@ Rectangle {
         }
         // 亮度
         Row { spacing: OpenUI.sp2; width: parent.width
-            Text { text: "\u2600"; color: OpenUI.onSurfaceVariant; width: 20 }
+            ThemedIcon { name: "weather-clear"; ctx: "Panel"; size: 16; color: OpenUI.onSurfaceVariant }
             Slider {
                 width: parent.width - 40; height: 24
                 from: 0; to: 100; value: 80

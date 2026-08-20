@@ -52,10 +52,9 @@ Window {
                     color: closeHover.hovered
                            ? Qt.rgba(OpenUI.error.r, OpenUI.error.g,
                                      OpenUI.error.b, 0.3) : "transparent"
-                    Text {
+                    ThemedIcon {
                         anchors.centerIn: parent
-                        text: "\u2715"; color: OpenUI.onSurface
-                        font.pixelSize: 14
+                        name: "window-close"; ctx: "Actions"; size: 14; color: OpenUI.onSurface
                     }
                     MouseArea {
                         id: closeHover
@@ -165,11 +164,11 @@ Window {
                                    ? Qt.rgba(OpenUI.onSurface.r, OpenUI.onSurface.g,
                                              OpenUI.onSurface.b, 0.1)
                                    : "transparent"
-                            Text {
+                            ThemedIcon {
                                 anchors.centerIn: parent
-                                text: model.pinned ? "\u2605" : "\u2606"
+                                name: model.pinned ? "star-filled" : "star-outline"
+                                ctx: "Status"; size: 12
                                 color: model.pinned ? OpenUI.primary : OpenUI.onSurfaceVariant
-                                font.pixelSize: 12
                             }
                             MouseArea {
                                 id: pinHover
@@ -194,10 +193,9 @@ Window {
                                    ? Qt.rgba(OpenUI.error.r, OpenUI.error.g,
                                              OpenUI.error.b, 0.3)
                                    : "transparent"
-                            Text {
+                            ThemedIcon {
                                 anchors.centerIn: parent
-                                text: "\u2715"; color: OpenUI.onSurfaceVariant
-                                font.pixelSize: 10
+                                name: "window-close"; ctx: "Actions"; size: 10; color: OpenUI.onSurfaceVariant
                             }
                             MouseArea {
                                 id: delHover

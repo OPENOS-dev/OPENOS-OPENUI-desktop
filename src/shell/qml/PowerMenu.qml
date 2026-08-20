@@ -34,10 +34,10 @@ Rectangle {
 
         Repeater {
             model: ListModel {
-                ListElement { icon: "\u23FB"; label: "关机"; cmd: "systemctl poweroff" }
-                ListElement { icon: "\u21BB"; label: "重启"; cmd: "systemctl reboot" }
-                ListElement { icon: "\uD83D"; label: "锁屏"; cmd: "openos-lock" }
-                ListElement { icon: "\u21AA"; label: "注销"; cmd: "loginctl terminate-session $XDG_SESSION_ID" }
+                ListElement { icon: "system-power"; label: "关机"; cmd: "systemctl poweroff" }
+                ListElement { icon: "system-reboot"; label: "重启"; cmd: "systemctl reboot" }
+                ListElement { icon: "system-lock-screen"; label: "锁屏"; cmd: "openos-lock" }
+                ListElement { icon: "system-log-out"; label: "注销"; cmd: "loginctl terminate-session $XDG_SESSION_ID" }
             }
             Rectangle {
                 width: parent.width; height: 38; radius: OpenUI.shapeXs
@@ -51,10 +51,10 @@ Rectangle {
                     anchors.fill: parent
                     anchors.leftMargin: OpenUI.sp3
                     spacing: OpenUI.sp2
-                    Text {
+                    ThemedIcon {
                         width: 22; height: parent.height
-                        verticalAlignment: Text.AlignVCenter
-                        text: model.icon; color: OpenUI.primary; font.pixelSize: 15
+                        name: model.icon; ctx: "Actions"; size: 16; color: OpenUI.primary
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
                         height: parent.height; verticalAlignment: Text.AlignVCenter

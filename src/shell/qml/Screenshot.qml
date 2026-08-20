@@ -41,11 +41,9 @@ Window {
                 radius: OpenUI.shapeXs
                 color: hover.hovered ? Qt.rgba(OpenUI.error.r, OpenUI.error.g,
                                                OpenUI.error.b, 0.3) : "transparent"
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: "\u2715"
-                    color: OpenUI.onSurface
-                    font.pixelSize: OpenUI.typeTitle
+                    name: "window-close"; ctx: "Actions"; size: 20; color: OpenUI.onSurface
                 }
                 MouseArea {
                     id: hover
@@ -73,9 +71,9 @@ Window {
 
                 Repeater {
                     model: ListModel {
-                        ListElement { icon: "\u25E7"; label: "区域"; mode: 0 }
-                        ListElement { icon: "\u2610"; label: "窗口"; mode: 1 }
-                        ListElement { icon: "\u25A3"; label: "全屏"; mode: 2 }
+                        ListElement { icon: "screenshot-region"; label: "区域"; mode: 0 }
+                        ListElement { icon: "screenshot-window"; label: "窗口"; mode: 1 }
+                        ListElement { icon: "screenshot-fullscreen"; label: "全屏"; mode: 2 }
                     }
 
                     Rectangle {
@@ -94,11 +92,9 @@ Window {
                             anchors.centerIn: parent
                             spacing: OpenUI.sp1
 
-                            Text {
-                                text: model.icon
+                            ThemedIcon {
+                                name: model.icon; ctx: "Actions"; size: 22
                                 color: captureMode === model.mode ? OpenUI.primary : OpenUI.onSurfaceVariant
-                                font.pixelSize: OpenUI.typeTitle
-                                horizontalAlignment: Text.AlignHCenter
                             }
                             Text {
                                 text: model.label
@@ -223,11 +219,16 @@ Window {
                 color: Qt.rgba(OpenUI.surfaceBright.r, OpenUI.surfaceBright.g,
                                OpenUI.surfaceBright.b, 0.4)
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "\u2713 复制到剪贴板"
-                    color: OpenUI.onSurface
-                    font.pixelSize: OpenUI.typeLabelL
+                Row {
+                    anchors.centerIn: parent; spacing: OpenUI.sp1
+                    ThemedIcon { name: "checkmark"; ctx: "Actions"; size: 14; color: OpenUI.onSurface
+                                 anchors.verticalCenter: parent.verticalCenter }
+                    Text {
+                        text: "复制到剪贴板"
+                        color: OpenUI.onSurface
+                        font.pixelSize: OpenUI.typeLabelL
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 MouseArea {
@@ -244,11 +245,16 @@ Window {
                 color: Qt.rgba(OpenUI.primary.r, OpenUI.primary.g,
                                OpenUI.primary.b, 0.9)
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "\u2713 保存"
-                    color: OpenUI.onPrimary
-                    font.pixelSize: OpenUI.typeLabelL
+                Row {
+                    anchors.centerIn: parent; spacing: OpenUI.sp1
+                    ThemedIcon { name: "document-save"; ctx: "Actions"; size: 14; color: OpenUI.onPrimary
+                                 anchors.verticalCenter: parent.verticalCenter }
+                    Text {
+                        text: "保存"
+                        color: OpenUI.onPrimary
+                        font.pixelSize: OpenUI.typeLabelL
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 MouseArea {

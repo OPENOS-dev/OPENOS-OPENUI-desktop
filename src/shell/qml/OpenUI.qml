@@ -101,4 +101,8 @@ QtObject {
     readonly property double glassCardAlpha: 0.75
     readonly property double glassMenuAlpha: 0.78
     readonly property double glassTaskAlpha: 0.30
+
+    // ---- 图标加载器 (C++ IconLoader, 由 main.cpp 注入为 context property) ----
+    // 用法: OpenUI.icon.url("system-power", 16, "Actions", "#F44336")
+    property var icon: _iconLoader || null
 }

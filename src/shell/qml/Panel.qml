@@ -157,11 +157,10 @@ Rectangle {
             color: powerHover.hovered || powerMenu.visible
                    ? Qt.rgba(OpenUI.error.r, OpenUI.error.g, OpenUI.error.b, 0.25)
                    : "transparent"
-            Text {
+            ThemedIcon {
                 anchors.centerIn: parent
-                text: "\u23FB"
+                name: "system-power"; ctx: "Actions"; size: 14
                 color: powerHover.hovered ? OpenUI.error : OpenUI.onSurfaceVariant
-                font.pixelSize: 14
             }
             MouseArea {
                 id: powerHover
@@ -171,7 +170,7 @@ Rectangle {
             }
         }
 
-        // Menu 按钮 (文字符号, 禁 Emoji)
+        // Menu 按钮 (NUI 图标, 禁 Emoji)
         Rectangle {
             id: menuBtn
             width: 84; height: panel.height - 8
@@ -182,12 +181,19 @@ Rectangle {
                               OpenUI.primary.b, 0.8)
                     : OpenUI.primary
             Behavior on color { ColorAnimation { duration: OpenUI.dur100 } }
-            Text {
-                anchors.centerIn: parent
-                text: "\u2630 Menu"
-                color: launcher.visible ? OpenUI.onPrimaryContainer
-                                       : OpenUI.onPrimary
-                font.pixelSize: 12; font.bold: true
+            Row {
+                anchors.centerIn: parent; spacing: 6
+                ThemedIcon {
+                    name: "open-menu"; ctx: "Actions"; size: 14
+                    color: launcher.visible ? OpenUI.onPrimaryContainer : OpenUI.onPrimary
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: "Menu"
+                    color: launcher.visible ? OpenUI.onPrimaryContainer : OpenUI.onPrimary
+                    font.pixelSize: 12; font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
             MouseArea {
                 id: menuHover

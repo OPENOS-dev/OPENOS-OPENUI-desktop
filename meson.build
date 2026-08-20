@@ -13,9 +13,9 @@ pixman        = dependency('pixman-1')
 libinput      = dependency('libinput')
 math          = cc.find_library('m')
 
-# Qt 6 (外壳): Core/Gui/Quick/Qml + WaylandClient(协议绑定)
+# Qt 6 (外壳): Core/Gui/Quick/Qml + WaylandClient(协议绑定) + Svg(图标着色)
 qt6      = import('qt6')
-qt6_dep  = dependency('qt6', modules: ['Core', 'Gui', 'Quick', 'Qml', 'WaylandClient'])
+qt6_dep  = dependency('qt6', modules: ['Core', 'Gui', 'Quick', 'Qml', 'WaylandClient', 'Svg'])
 
 inc = include_directories('src')
 
@@ -69,19 +69,22 @@ layer_shell_qt = dependency('LayerShellQt', required: false)
 # 数据协议 (foreign-toplevel / 自研 workspace) 用原生 wayland-client 绑定。
 # 注: 旧 cairo 客户端 panel.c / notifyd.c 已由 Qt 外壳取代, 保留源码但不编译。
 qt6_shell = qt6.preprocess(
-  moc_headers: ['src/shell/shellbackend.h', 'src/shell/waylandbridge.h'],
+  moc_headers: ['src/shell/shellbackend.h', 'src/shell/waylandbridge.h',
+                'src/shell/iconloader.h', 'src/shell/iconprovider.h'],
   qresources:  ['src/shell/qml/qml.qrc'],
 )
 executable('openos-shell',
   sources: ['src/shell/main.cpp', 'src/shell/shellbackend.cpp',
-            'src/shell/waylandbridge.cpp', qt6_shell,
+            'src/shell/waylandbridge.cpp',
+            'src/shell/iconloader.cpp', 'src/shell/iconprovider.cpp',
+            qt6_shell,
             ft_cli, ft_code, ws_cli, ws_code],
   dependencies: [qt6_dep, wayland_client, math, layer_shell_qt],
   include_directories: inc,
   cpp_args: layer_shell_qt.found() ? ['-DOPENOS_USE_LAYERSHELLQT'] : [],
   install: true)
 
-# 内置 freedesktop 图标主题 (NUI 线条风, 90 个 SVG, 8 个 Context)
+# 内置 freedesktop 图标主题 (NUI 线条风, 102 个 SVG, 8 个 Context)
 # 安装到 /usr/share/icons/OpenOS/, 由 IconLoader 优先查找, hicolor 兜底
 install_subdir('icons/OpenOS',
   install_dir: get_option('datadir') / 'icons',

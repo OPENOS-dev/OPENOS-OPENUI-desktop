@@ -84,11 +84,9 @@ Window {
                        ? Qt.rgba(OpenUI.error.r, OpenUI.error.g, OpenUI.error.b, OpenUI.hoverAlpha)
                        : "transparent"
 
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: "✕"
-                    color: OpenUI.onSurface
-                    font.pixelSize: 14
+                    name: "window-close"; ctx: "Actions"; size: 14; color: OpenUI.onSurface
                 }
 
                 MouseArea {
@@ -117,9 +115,9 @@ Window {
 
                 Repeater {
                     model: ListModel {
-                        ListElement { icon: "▣"; label: "全屏";   value: "full" }
-                        ListElement { icon: "☐"; label: "区域";   value: "region" }
-                        ListElement { icon: "◧"; label: "窗口";   value: "window" }
+                        ListElement { icon: "screenshot-fullscreen"; label: "全屏";   value: "full" }
+                        ListElement { icon: "screenshot-region"; label: "区域";   value: "region" }
+                        ListElement { icon: "screenshot-window"; label: "窗口";   value: "window" }
                     }
 
                     Rectangle {
@@ -136,10 +134,9 @@ Window {
                             anchors.centerIn: parent
                             spacing: OpenUI.sp2
 
-                            Text {
-                                text: model.icon
+                            ThemedIcon {
+                                name: model.icon; ctx: "Actions"; size: 14
                                 color: areaSelected === model.value ? OpenUI.primary : OpenUI.onSurfaceVariant
-                                font.pixelSize: 14
                             }
 
                             Text {
@@ -309,11 +306,10 @@ Window {
                 scale: rbHover.hovered ? 1.08 : 1.0
                 Behavior on scale { NumberAnimation { duration: OpenUI.dur100 } }
 
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: isRecording ? "■" : "●"
-                    color: OpenUI.onError
-                    font.pixelSize: 26
+                    name: isRecording ? "media-playback-pause" : "media-record"
+                    ctx: "Actions"; size: 22; color: OpenUI.onError
                 }
 
                 MouseArea {
@@ -336,12 +332,7 @@ Window {
                 anchors.rightMargin: OpenUI.sp4
                 color: Qt.rgba(OpenUI.surfaceBright.r, OpenUI.surfaceBright.g, OpenUI.surfaceBright.b, OpenUI.glassCardAlpha)
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "⏸"
-                    color: OpenUI.onSurface
-                    font.pixelSize: 18
-                }
+                ThemedIcon { anchors.centerIn: parent; name: "media-playback-pause"; ctx: "Actions"; size: 18; color: OpenUI.onSurface }
 
                 MouseArea {
                     anchors.fill: parent
@@ -373,12 +364,8 @@ Window {
                     anchors.leftMargin: OpenUI.sp2
                     spacing: OpenUI.sp2
 
-                    Text {
-                        text: "☰"
-                        color: OpenUI.onSurfaceVariant
-                        font.pixelSize: 14
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                    ThemedIcon { name: "open-menu"; ctx: "Actions"; size: 14; color: OpenUI.onSurfaceVariant
+                                 anchors.verticalCenter: parent.verticalCenter }
 
                     Text {
                         id: savePathText

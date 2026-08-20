@@ -72,7 +72,7 @@ Window {
                 Rectangle {
                     width: 40; height: 32; radius: OpenUI.shapeXs
                     color: shiftHover.hovered ? Qt.rgba(OpenUI.primary.r,OpenUI.primary.g,OpenUI.primary.b,0.3) : Qt.rgba(OpenUI.surfaceBright.r,OpenUI.surfaceBright.g,OpenUI.surfaceBright.b,0.3)
-                    Text { anchors.centerIn: parent; text: "\u21E7"; color: shift ? OpenUI.primary : OpenUI.onSurface; font.pixelSize: 14 }
+                    ThemedIcon { anchors.centerIn: parent; name: "input-shift"; ctx: "Actions"; size: 14; color: shift ? OpenUI.primary : OpenUI.onSurface }
                     MouseArea { id: shiftHover; anchors.fill: parent; hoverEnabled: true; onClicked: { shift = !shift; caps = false } }
                 }
                 Repeater {
@@ -85,7 +85,7 @@ Window {
                 Rectangle {
                     width: 40; height: 32; radius: OpenUI.shapeXs
                     color: delHover.hovered ? Qt.rgba(OpenUI.error.r,OpenUI.error.g,OpenUI.error.b,0.3) : Qt.rgba(OpenUI.surfaceBright.r,OpenUI.surfaceBright.g,OpenUI.surfaceBright.b,0.3)
-                    Text { anchors.centerIn: parent; text: "\u232B"; color: OpenUI.onSurface; font.pixelSize: 14 }
+                    ThemedIcon { anchors.centerIn: parent; name: "edit-clear-backspace"; ctx: "Actions"; size: 14; color: OpenUI.onSurface }
                     MouseArea { id: delHover; anchors.fill: parent; hoverEnabled: true; onClicked: sendKey("backspace") }
                 }
             }
@@ -106,7 +106,7 @@ Window {
                 Rectangle {
                     width: 40; height: 32; radius: OpenUI.shapeXs
                     color: entHover.hovered ? Qt.rgba(OpenUI.primary.r,OpenUI.primary.g,OpenUI.primary.b,0.3) : Qt.rgba(OpenUI.surfaceBright.r,OpenUI.surfaceBright.g,OpenUI.surfaceBright.b,0.3)
-                    Text { anchors.centerIn: parent; text: "\u23CE"; color: OpenUI.primary; font.pixelSize: 14 }
+                    ThemedIcon { anchors.centerIn: parent; name: "key-enter"; ctx: "Actions"; size: 14; color: OpenUI.primary }
                     MouseArea { id: entHover; anchors.fill: parent; hoverEnabled: true; onClicked: sendKey("enter") }
                 }
                 Rectangle {

@@ -16,26 +16,26 @@ Window { id: win; visible: false; width: 600; height: 420; minimumWidth: 360; mi
       Text { text: images.length + " 张图片"; anchors.verticalCenter: parent.verticalCenter; color: OpenUI.onSurfaceVariant; font.pixelSize: OpenUI.typeLabelM }
       Item { width: parent.width - 220; height: 1 }
       Rectangle { width: 24; height: 24; radius: OpenUI.shapeXs; color: gh.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,OpenUI.hoverAlpha) : "transparent"; anchors.verticalCenter: parent.verticalCenter
-        Text { anchors.centerIn: parent; text: "\u25A6"; color: gridMode ? OpenUI.primary : OpenUI.onSurfaceVariant; font.pixelSize: 12 }
+        ThemedIcon { anchors.centerIn: parent; name: "view-grid"; ctx: "Actions"; size: 14; color: gridMode ? OpenUI.primary : OpenUI.onSurfaceVariant }
         MouseArea { id: gh; anchors.fill: parent; hoverEnabled: true; onClicked: gridMode = true } }
       Rectangle { width: 24; height: 24; radius: OpenUI.shapeXs; color: pv.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,OpenUI.hoverAlpha) : "transparent"; anchors.verticalCenter: parent.verticalCenter
-        Text { anchors.centerIn: parent; text: "\u25A3"; color: !gridMode ? OpenUI.primary : OpenUI.onSurfaceVariant; font.pixelSize: 12 }
+        ThemedIcon { anchors.centerIn: parent; name: "view-grid-filled"; ctx: "Actions"; size: 14; color: !gridMode ? OpenUI.primary : OpenUI.onSurfaceVariant }
         MouseArea { id: pv; anchors.fill: parent; hoverEnabled: true; onClicked: gridMode = false } } }
     // 缩略图网格
     GridView { visible: gridMode; anchors.top: parent.top; anchors.topMargin: 64; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: OpenUI.sp3; model: images; cellWidth: 110; cellHeight: 110; interactive: true
       delegate: Rectangle { width: 90; height: 90; radius: OpenUI.shapeMd; color: Qt.rgba(OpenUI.surfaceBright.r,OpenUI.surfaceBright.g,OpenUI.surfaceBright.b,0.15); border.color: currentIndex === index ? OpenUI.primary : "transparent"; border.width: 2
         Column { anchors.centerIn: parent; spacing: 2
           Rectangle { width: 48; height: 48; radius: OpenUI.shapeSm; anchors.horizontalCenter: parent.horizontalCenter; color: modelData.c
-            Text { anchors.centerIn: parent; text: "\u2B21"; color: Qt.rgba(1,1,1,0.4); font.pixelSize: 20 } }
+            ThemedIcon { anchors.centerIn: parent; name: "image-missing"; ctx: "Status"; size: 24; color: Qt.rgba(1,1,1,0.4) } }
           Text { text: modelData.n; anchors.horizontalCenter: parent.horizontalCenter; color: OpenUI.onSurface; font.pixelSize: 10; elide: Text.ElideRight; width: 80; horizontalAlignment: Text.AlignHCenter } }
         MouseArea { anchors.fill: parent; hoverEnabled: true; onClicked: { currentIndex = index; gridMode = false; zoomLevel = 100 } } } }
     // 单图预览
     Item { visible: !gridMode; anchors.top: parent.top; anchors.topMargin: 64; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right
       Rectangle { anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter; width: 28; height: 28; radius: 14; color: pr.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,0.2) : Qt.rgba(0,0,0,0.4); z: 2
-        Text { anchors.centerIn: parent; text: "\u276E"; color: OpenUI.onSurface; font.pixelSize: 14 }
+        ThemedIcon { anchors.centerIn: parent; name: "chevron-left"; ctx: "Navigation"; size: 14; color: OpenUI.onSurface }
         MouseArea { id: pr; anchors.fill: parent; hoverEnabled: true; onClicked: { currentIndex = (currentIndex - 1 + images.length) % images.length } } }
       Rectangle { anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter; width: 28; height: 28; radius: 14; color: nx.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,0.2) : Qt.rgba(0,0,0,0.4); z: 2
-        Text { anchors.centerIn: parent; text: "\u276F"; color: OpenUI.onSurface; font.pixelSize: 14 }
+        ThemedIcon { anchors.centerIn: parent; name: "chevron-right"; ctx: "Navigation"; size: 14; color: OpenUI.onSurface }
         MouseArea { id: nx; anchors.fill: parent; hoverEnabled: true; onClicked: { currentIndex = (currentIndex + 1) % images.length } } }
       Rectangle { anchors.centerIn: parent; width: 200; height: 160; radius: OpenUI.shapeSm; color: currentIndex >= 0 ? images[currentIndex].c : OpenUI.surfaceDim
-        Text { anchors.centerIn: parent; text: "\u2B21"; color: Qt.rgba(1,1,1,0.3); font.pixelSize: 60 } } } } }
+        ThemedIcon { anchors.centerIn: parent; name: "image-missing"; ctx: "Status"; size: 60; color: Qt.rgba(1,1,1,0.3) } } } } }

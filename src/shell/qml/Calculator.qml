@@ -20,8 +20,12 @@ Window {
 
         Column {
             anchors.centerIn: parent; spacing: OpenUI.sp2
-            Text { text: "\uD83D\uDD22 计算器"; anchors.horizontalCenter: parent.horizontalCenter
-                   color: OpenUI.onSurface; font.pixelSize: OpenUI.typeTitle }
+            Row {
+                spacing: OpenUI.sp2; anchors.horizontalCenter: parent.horizontalCenter
+                ThemedIcon { name: "accessories-calculator"; ctx: "apps"; size: 22; color: OpenUI.primary }
+                Text { text: "计算器"; color: OpenUI.onSurface; font.pixelSize: OpenUI.typeTitle
+                       anchors.verticalCenter: parent.verticalCenter }
+            }
             Text { text: "启动独立应用..."; anchors.horizontalCenter: parent.horizontalCenter
                    color: OpenUI.onSurfaceVariant; font.pixelSize: OpenUI.typeLabelM }
         }

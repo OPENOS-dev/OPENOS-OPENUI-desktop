@@ -38,5 +38,6 @@
         <file>MediaPlayer.qml</file>
         <file>Clock.qml</file>
         <file>ImageViewer.qml</file>
+        <file>ThemedIcon.qml</file>
     </qresource>
-
+</RCC>

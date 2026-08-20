@@ -123,8 +123,9 @@ Item {
             color: Qt.rgba(OpenUI.surfaceBright.r, OpenUI.surfaceBright.g,
                            OpenUI.surfaceBright.b, 0.4)
             Row { anchors.fill: parent; anchors.leftMargin: OpenUI.sp3; spacing: OpenUI.sp2
-                Text { width: 24; height: parent.height; verticalAlignment: Text.AlignVCenter
-                       text: "\u263C"; color: OpenUI.primary }
+                ThemedIcon { width: 24; height: parent.height
+                             name: "network-wireless"; ctx: "Panel"; size: 16; color: OpenUI.primary
+                             anchors.verticalCenter: parent.verticalCenter }
                 Text { height: parent.height; verticalAlignment: Text.AlignVCenter
                        text: "Wi-Fi: 已连接"; color: OpenUI.onSurface; font.pixelSize: OpenUI.typeBodyM }
             }

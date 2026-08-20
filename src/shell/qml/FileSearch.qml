@@ -60,11 +60,9 @@ Rectangle {
                 color: Qt.rgba(OpenUI.surfaceBright.r, OpenUI.surfaceBright.g,
                                OpenUI.surfaceBright.b, 0.5)
 
-                Text {
+                ThemedIcon {
                     id: searchIcon
-                    text: "\u2315"
-                    color: OpenUI.onSurfaceVariant
-                    font.pixelSize: OpenUI.typeBodyM
+                    name: "edit-find"; ctx: "Actions"; size: 16; color: OpenUI.onSurfaceVariant
                     anchors.left: parent.left
                     anchors.leftMargin: OpenUI.sp3
                     anchors.verticalCenter: parent.verticalCenter
@@ -144,13 +142,12 @@ Rectangle {
                         spacing: OpenUI.sp2
 
                         // file type icon
-                        Text {
+                        ThemedIcon {
                             width: 24; height: parent.height
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                            text: isDir ? "\u25A4" : "\u25A8"
-                            color: OpenUI.primary
-                            font.pixelSize: OpenUI.typeLabelL
+                            name: isDir ? "folder" : "document"
+                            ctx: isDir ? "Places" : "Places"
+                            size: 16; color: OpenUI.primary
+                            anchors.verticalCenter: parent.verticalCenter
                         }
 
                         // name + path

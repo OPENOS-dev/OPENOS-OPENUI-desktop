@@ -10,7 +10,7 @@
    stroke-linejoin="round"
    version="1.1"
    id="svg2"
-   sodipodi:docname="battery-good.svg"
+   sodipodi:docname="battery-low.svg"
    inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -27,13 +27,13 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="1"
      inkscape:deskcolor="#505050"
-     inkscape:zoom="12.291646"
-     inkscape:cx="12.813581"
-     inkscape:cy="14.27799"
-     inkscape:window-width="1500"
-     inkscape:window-height="830"
-     inkscape:window-x="262"
-     inkscape:window-y="219"
+     inkscape:zoom="20.043278"
+     inkscape:cx="15.566316"
+     inkscape:cy="10.801627"
+     inkscape:window-width="1463"
+     inkscape:window-height="798"
+     inkscape:window-x="127"
+     inkscape:window-y="174"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" />
   <rect
@@ -49,10 +49,9 @@
   <rect
      x="5"
      y="10"
-     width="6.8237352"
+     width="3"
      height="4"
      fill="currentColor"
      stroke="none"
-     id="rect2"
-     style="stroke-width:2.26226" />
+     id="rect2" />
 </svg>

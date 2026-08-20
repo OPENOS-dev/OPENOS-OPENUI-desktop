@@ -41,7 +41,7 @@ Window {
 
             // 模拟天气
             Row { width: parent.width; spacing: OpenUI.sp3
-                Text { text: "\u2600"; color: OpenUI.statusWarning; font.pixelSize: 28 }
+                ThemedIcon { name: "weather-clear"; ctx: "Panel"; size: 28; color: OpenUI.statusWarning }
                 Column { spacing: 2
                     Text { text: "25\u00B0C 晴"; color: OpenUI.onSurface; font.pixelSize: 18 }
                     Text { text: "湿度: 45%  |  风速: 3m/s"; color: OpenUI.onSurfaceVariant; font.pixelSize: OpenUI.typeLabelS }
@@ -53,7 +53,10 @@ Window {
 
             // 快捷便签
             Column { width: parent.width; spacing: OpenUI.sp1
-                Text { text: "\u2712 快捷便签"; color: OpenUI.onSurfaceVariant; font.pixelSize: OpenUI.typeLabelM }
+                Row { spacing: OpenUI.sp1
+                    ThemedIcon { name: "accessories-notes"; ctx: "Apps"; size: 12; color: OpenUI.onSurfaceVariant }
+                    Text { text: "快捷便签"; color: OpenUI.onSurfaceVariant; font.pixelSize: OpenUI.typeLabelM }
+                }
                 Rectangle {
                     width: parent.width; height: 60; radius: OpenUI.shapeXs
                     color: Qt.rgba(OpenUI.surfaceBright.r, OpenUI.surfaceBright.g, OpenUI.surfaceBright.b, 0.25)

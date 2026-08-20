@@ -22,7 +22,7 @@ Window {
             Rectangle { width: 32; height: 32; radius: OpenUI.shapeXs
                 color: hover.hovered ? Qt.rgba(OpenUI.error.r, OpenUI.error.g,
                                                OpenUI.error.b, 0.3) : "transparent"
-                Text { anchors.centerIn: parent; text: "\u2715"; color: OpenUI.onSurface }
+                ThemedIcon { anchors.centerIn: parent; name: "window-close"; ctx: "Actions"; size: 14; color: OpenUI.onSurface }
                 MouseArea { id: hover; anchors.fill: parent; hoverEnabled: true
                     onClicked: vmappWin.visible = false }
             }

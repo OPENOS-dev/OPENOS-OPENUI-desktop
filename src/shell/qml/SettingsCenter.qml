@@ -28,11 +28,11 @@ Window {
                 anchors.fill: parent; anchors.topMargin: OpenUI.sp4
                 Repeater {
                     model: ListModel {
-                        ListElement { icon: "\u2699"; label: "外观" }
-                        ListElement { icon: "\uD83D"; label: "安全" }
-                        ListElement { icon: "\u2630"; label: "软件包" }
-                        ListElement { icon: "\u25A0"; label: "系统" }
-                        ListElement { icon: "\u263C"; label: "网络" }
+                        ListElement { icon: "preferences-system"; label: "外观" }
+                        ListElement { icon: "preferences-desktop-security"; label: "安全" }
+                        ListElement { icon: "system-software-install"; label: "软件包" }
+                        ListElement { icon: "applications-system"; label: "系统" }
+                        ListElement { icon: "preferences-system-network"; label: "网络" }
                     }
                     Rectangle {
                         width: 160; height: 40; radius: OpenUI.shapeXs
@@ -46,8 +46,11 @@ Window {
                         Row {
                             anchors.fill: parent; anchors.leftMargin: OpenUI.sp4
                             spacing: OpenUI.sp2
-                            Text { width: 24; height: parent.height; verticalAlignment: Text.AlignVCenter
-                                   text: model.icon; color: OpenUI.primary; font.pixelSize: 15 }
+                            ThemedIcon {
+                                width: 24; height: parent.height
+                                name: model.icon; ctx: "Apps"; size: 16; color: OpenUI.primary
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                             Text { height: parent.height; verticalAlignment: Text.AlignVCenter
                                    text: model.label; color: OpenUI.onSurface
                                    font.pixelSize: OpenUI.typeLabelL }

@@ -33,7 +33,13 @@ Window {
         Column {
             anchors.fill: parent; anchors.margins: OpenUI.sp4; spacing: OpenUI.sp3
 
-            Text { text: "\u2B50 外观设置"; color: OpenUI.onSurface; font.pixelSize: OpenUI.typeTitle; font.bold: true }
+            Row {
+                spacing: OpenUI.sp2
+                Text { text: "外观设置"; color: OpenUI.onSurface; font.pixelSize: OpenUI.typeTitle; font.bold: true
+                       anchors.verticalCenter: parent.verticalCenter }
+                ThemedIcon { name: "preferences-desktop"; ctx: "apps"; size: 18
+                             color: OpenUI.primary; anchors.verticalCenter: parent.verticalCenter }
+            }
 
             // 壁纸选择
             Column { width: parent.width; spacing: OpenUI.sp1

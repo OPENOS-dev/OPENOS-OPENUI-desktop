@@ -49,11 +49,9 @@ Rectangle {
                 width: 24; height: 24; radius: OpenUI.shapeXs
                 color: closeHover.hovered ? Qt.rgba(OpenUI.error.r, OpenUI.error.g,
                                                      OpenUI.error.b, 0.3) : "transparent"
-                Text {
+                ThemedIcon {
                     anchors.centerIn: parent
-                    text: "\u2715"
-                    color: OpenUI.onSurface
-                    font.pixelSize: OpenUI.typeLabelL
+                    name: "window-close"; ctx: "Actions"; size: 16; color: OpenUI.onSurface
                 }
                 MouseArea {
                     id: closeHover

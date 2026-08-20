@@ -61,10 +61,10 @@ Rectangle {
                 Row {
                     anchors.fill: parent; anchors.leftMargin: OpenUI.sp3
                     spacing: OpenUI.sp2
-                    Text {
+                    ThemedIcon {
                         width: 20; height: parent.height
-                        verticalAlignment: Text.AlignVCenter
-                        text: model.icon; color: OpenUI.primary; font.pixelSize: 13
+                        name: model.icon; ctx: "Actions"; size: 14; color: OpenUI.primary
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
                         height: parent.height; verticalAlignment: Text.AlignVCenter
@@ -86,11 +86,11 @@ Rectangle {
 
     function build() {
         commands.clear()
-        commands.append({ icon: "\u2630", label: "打开应用抽屉", action: "launcher" })
-        commands.append({ icon: "\u21BB", label: "重启", action: "reboot" })
-        commands.append({ icon: "\u23FB", label: "关机", action: "poweroff" })
-        commands.append({ icon: "\u263C", label: "切换工作区", action: "workspace" })
-        commands.append({ icon: "\u2699", label: "打开设置", action: "settings" })
+        commands.append({ icon: "open-menu",        label: "打开应用抽屉", action: "launcher" })
+        commands.append({ icon: "system-reboot",   label: "重启", action: "reboot" })
+        commands.append({ icon: "system-power",    label: "关机", action: "poweroff" })
+        commands.append({ icon: "applications-system", label: "切换工作区", action: "workspace" })
+        commands.append({ icon: "preferences-system", label: "打开设置", action: "settings" })
         filter()
     }
     function filter() {

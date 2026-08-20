@@ -20,8 +20,12 @@ Window {
 
         Column {
             anchors.centerIn: parent; spacing: OpenUI.sp2
-            Text { text: "\u2395 终端"; anchors.horizontalCenter: parent.horizontalCenter
-                   color: OpenUI.onSurface; font.pixelSize: OpenUI.typeTitle }
+            Row {
+                spacing: OpenUI.sp2; anchors.horizontalCenter: parent.horizontalCenter
+                ThemedIcon { name: "utilities-terminal"; ctx: "Apps"; size: 22; color: OpenUI.primary }
+                Text { text: "终端"; color: OpenUI.onSurface; font.pixelSize: OpenUI.typeTitle
+                       anchors.verticalCenter: parent.verticalCenter }
+            }
             Text { text: "启动独立应用..."; anchors.horizontalCenter: parent.horizontalCenter
                    color: OpenUI.onSurfaceVariant; font.pixelSize: OpenUI.typeLabelM }
         }
