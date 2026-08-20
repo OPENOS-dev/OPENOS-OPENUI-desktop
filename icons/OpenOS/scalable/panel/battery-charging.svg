@@ -27,13 +27,13 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="1"
      inkscape:deskcolor="#505050"
-     inkscape:zoom="6.235319"
-     inkscape:cx="24.45745"
-     inkscape:cy="14.594281"
+     inkscape:zoom="18.419338"
+     inkscape:cx="19.897567"
+     inkscape:cy="10.423828"
      inkscape:window-width="1398"
      inkscape:window-height="721"
-     inkscape:window-x="104"
-     inkscape:window-y="213"
+     inkscape:window-x="154"
+     inkscape:window-y="222"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" />
   <rect
@@ -47,8 +47,10 @@
      d="m 21,11 v 2"
      id="path1" />
   <path
-     d="M11 7l-3 5h3l-1 5 3-5h-3z"
+     d="M 11.72551,8.7373046 9.377,12 h 1.565674 L 10.159837,15.262695 12.508347,12 h -1.565673 z"
      fill="currentColor"
      stroke="none"
-     id="path2" />
+     id="path2"
+     sodipodi:nodetypes="ccccccc"
+     style="stroke-width:1.07209" />
 </svg>
