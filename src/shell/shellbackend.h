@@ -17,7 +17,14 @@ struct AppInfo { QString name; QString exec; QString vmapp; QString source; QStr
  *   source = "vmapp"   -> 隔离环境 (/vmapp/<app>/usr/share/applications)
  */
 struct WorkspaceInfo { QString name; bool active; };
-struct NotificationInfo { QString title; QString body; };
+struct NotificationAction { QString id; QString label; };
+struct NotificationInfo {
+    QString title;
+    QString body;
+    QString appId;
+    qint64 timestamp;
+    QVector<NotificationAction> actions;
+};
 
 class ToplevelModel : public QAbstractListModel {
     Q_OBJECT
@@ -97,27 +104,68 @@ private:
 
 class NotificationModel : public QAbstractListModel {
     Q_OBJECT
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 public:
-    enum Role { TitleRole = Qt::UserRole + 1, BodyRole };
+    enum Role {
+        TitleRole = Qt::UserRole + 1,
+        BodyRole,
+        AppIdRole,
+        TimestampRole,
+        ActionsRole,
+        GroupRole
+    };
     int rowCount(const QModelIndex&) const override { return m_items.size(); }
     QVariant data(const QModelIndex& idx, int role) const override {
         if (idx.row() < 0 || idx.row() >= m_items.size()) return {};
         const NotificationInfo& n = m_items[idx.row()];
-        return role == TitleRole ? n.title : role == BodyRole ? n.body : QVariant();
+        switch (role) {
+        case TitleRole:     return n.title;
+        case BodyRole:      return n.body;
+        case AppIdRole:     return n.appId;
+        case TimestampRole: return n.timestamp;
+        case ActionsRole: {
+            QStringList labels;
+            for (const auto& a : n.actions)
+                labels.append(a.label);
+            return labels;
+        }
+        case GroupRole: {
+            if (n.appId.isEmpty()) return QStringLiteral("system");
+            return n.appId;
+        }
+        }
+        return {};
     }
     QHash<int, QByteArray> roleNames() const override {
-        return { {TitleRole, "title"}, {BodyRole, "body"} };
+        return { {TitleRole, "title"}, {BodyRole, "body"},
+                 {AppIdRole, "appId"}, {TimestampRole, "timestamp"},
+                 {ActionsRole, "actions"}, {GroupRole, "group"} };
     }
     void add(const NotificationInfo& n) {
-        if (m_items.size() >= 4) removeAt(0);   /* 最多 4 条 */
+        if (m_items.size() >= 8) removeAt(0);   /* 最多 8 条 */
         beginInsertRows({}, m_items.size(), m_items.size());
-        m_items.append(n); endInsertRows();
+        m_items.append(n);
+        endInsertRows();
+        emit countChanged();
     }
     void removeAt(int i) {
         if (i < 0 || i >= m_items.size()) return;
-        beginRemoveRows({}, i, i); m_items.removeAt(i); endRemoveRows();
+        beginRemoveRows({}, i, i);
+        m_items.removeAt(i);
+        endRemoveRows();
+        emit countChanged();
+    }
+    void clear() {
+        if (m_items.isEmpty()) return;
+        beginResetModel();
+        m_items.clear();
+        endResetModel();
+        emit countChanged();
     }
     int count() const { return m_items.size(); }
+    QVector<NotificationInfo> history() const { return m_items; }
+signals:
+    void countChanged();
 private:
     QVector<NotificationInfo> m_items;
 };
@@ -167,6 +215,7 @@ class ShellBackend : public QObject {
     Q_PROPERTY(NotificationModel* notifications READ notifications CONSTANT)
     Q_PROPERTY(AppsModel* apps READ apps CONSTANT)
     Q_PROPERTY(int panelHeight READ panelHeight CONSTANT)
+    Q_PROPERTY(bool doNotDisturb READ doNotDisturb WRITE setDoNotDisturb NOTIFY doNotDisturbChanged)
 public:
     explicit ShellBackend(QObject* parent = nullptr);
     ToplevelModel* windows() const { return m_windows; }
@@ -174,6 +223,8 @@ public:
     NotificationModel* notifications() const { return m_notifications; }
     AppsModel* apps() const { return m_apps; }
     int panelHeight() const { return 32; }   /* OUI_PANEL_HEIGHT */
+    bool doNotDisturb() const { return m_doNotDisturb; }
+    void setDoNotDisturb(bool dnd);
 
     /* 供 WaylandBridge 调用: 数据更新入口 */
     Q_INVOKABLE void addWindow(const QString& title, const QString& appId, bool active);
@@ -183,8 +234,11 @@ public:
     Q_INVOKABLE void addWorkspace(const QString& name);
     Q_INVOKABLE void setWorkspaceName(int index, const QString& name);
     Q_INVOKABLE void setWorkspaceActive(int index, bool active);
-    Q_INVOKABLE void showNotification(const QString& title, const QString& body);
+    Q_INVOKABLE void showNotification(const QString& title, const QString& body,
+                                      const QString& appId = QString(),
+                                      const QVariantList& actions = QVariantList());
     Q_INVOKABLE void dismissNotification(int index);
+    Q_INVOKABLE void clearAllNotifications();
 
     /* 应用抽屉: 重新扫描 vmapp 各环境 + 系统 .desktop, 填充 apps 模型 */
     Q_INVOKABLE void refreshApps();
@@ -197,11 +251,14 @@ public:
     Q_INVOKABLE void closeWindow(int index);
     Q_INVOKABLE void activateWorkspace(int index);
 
+signals:
+    void doNotDisturbChanged();
 private:
-    void scanDesktopDir(const QString& dir, const QString& vmapp);
+    void scanDesktopDir(const QString& dir, const QString& vmapp, const QString& source);
 
     ToplevelModel* m_windows;
     WorkspaceModel* m_workspaces;
     NotificationModel* m_notifications;
     AppsModel* m_apps;
+    bool m_doNotDisturb = false;
 };

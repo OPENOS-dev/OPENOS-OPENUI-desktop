@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 /* OPENOS 桌面环境 — Wayland 合成器 (wlroots)
- * 提供: 窗口管理(xdg-shell) + 桌面层(layer-shell, 供面板/启动器) + NUI2 主题
+ * 提供: 窗口管理(xdg-shell) + 桌面层(layer-shell) + NUI2 主题
+ *      + 窗口装饰(SSD) + 窗口动画 + 触摸板手势 + 分屏平铺
  * 目标: wlroots >= 0.17, 在 OPENOS(Linux) 上构建与运行 (macOS 无法编译运行)。
  */
 #include <assert.h>
@@ -23,13 +24,16 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management.h>
+#include <wlr/types/wlr_pointer.h>
 #include <wlr/util/log.h>
+#include "compositor.h"
 #include "nui2.h"
 #include "blur.h"
-#include "workspace.h"
+#include "decorations.h"
+#include "tiling.h"
+#include "gestures.h"
 
-#define WORKSPACE_COUNT 4
-/* 属于"模糊层"的 layer-shell namespace: 其下方桌面内容会被高斯模糊 (NUI2 毛玻璃) */
+/* 属于"模糊层"的 layer-shell namespace */
 static bool is_blur_namespace(const char *ns) {
     return ns &&
         (strcmp(ns, "openos-panel") == 0 ||
@@ -37,93 +41,7 @@ static bool is_blur_namespace(const char *ns) {
          strcmp(ns, "openos-notifyd") == 0);
 }
 
-struct openos_server {
-    struct wl_display *display;
-    struct wlr_backend *backend;
-    struct wlr_renderer *renderer;
-    struct wlr_allocator *allocator;
-    struct wlr_scene *scene;
-    struct wlr_scene_output_layout *scene_layout;
-    struct wlr_output_layout *output_layout;
-    struct wlr_xdg_shell *xdg_shell;
-    struct wlr_layer_shell_v1 *layer_shell;
-    struct wlr_cursor *cursor;
-    struct wlr_xcursor_manager *xcursor_mgr;
-    struct wlr_seat *seat;
-    struct wl_list views;   /* openos_view.link */
-    struct wl_list outputs; /* openos_output.link */
-
-    /* 多工作区: 每个工作区一棵场景子树, 切换时整树开关 */
-    struct wlr_scene_tree *workspaces[WORKSPACE_COUNT];
-    int current_workspace;
-    /* 模糊层: 面板/菜单/通知 等被动态模糊的内容挂在此树下 */
-    struct wlr_scene_tree *blur_tree;
-
-    /* 窗口列表 (任务栏) + 工作区 (切换器) 协议 */
-    struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel;
-    struct openos_workspace_manager *workspace_mgr;
-    struct wl_listener ft_request_activate;
-    struct wl_listener ft_request_close;
-    struct wl_listener ft_request_maximize;
-
-    struct wlr_surface *grabbed_surface;
-    double grab_x, grab_y;
-    int grab_geobox_x, grab_geobox_y;
-    uint32_t resize_edges;
-
-    struct wl_listener new_output;
-    struct wl_listener new_input;
-    struct wl_listener new_xdg_toplevel;
-    struct wl_listener new_layer_surface;
-    struct wl_listener cursor_motion;
-    struct wl_listener cursor_motion_abs;
-    struct wl_listener cursor_button;
-    struct wl_listener cursor_axis;
-    struct wl_listener cursor_frame;
-    struct wl_listener request_cursor;
-    struct wl_listener keyboard_key;
-    struct wl_listener keyboard_destroy;
-};
-
-struct openos_output {
-    struct wl_list link;
-    struct openos_server *server;
-    struct wlr_output *wlr_output;
-    struct wlr_scene_output *scene_output;
-    struct wl_listener frame;
-};
-
-struct openos_view {
-    struct wl_list link;
-    struct openos_server *server;
-    struct wlr_xdg_toplevel *xdg_toplevel;
-    struct wlr_scene_tree *scene_tree;
-    struct wlr_scene_rect *border;
-    struct wlr_scene_surface *scene_surface;
-    bool mapped;
-    int workspace;   /* 所属工作区索引 */
-    struct wlr_foreign_toplevel_handle_v1 *ft_handle;
-
-    struct wl_listener map;
-    struct wl_listener unmap;
-    struct wl_listener destroy;
-    struct wl_listener request_move;
-    struct wl_listener request_resize;
-    struct wl_listener request_maximize;
-    struct wl_listener request_fullscreen;
-};
-
-struct openos_layer {
-    struct openos_server *server;
-    struct wlr_layer_surface_v1 *layer_surface;
-    struct wlr_scene_layer_surface_v1 *scene_layer;
-    struct wl_listener destroy;
-    struct wl_listener map;
-    struct wl_listener unmap;
-    struct wl_listener configure;
-};
-
-/* 0xRRGGBB -> 归一化 float[4] (用于 wlr_scene 颜色) */
+/* 0xRRGGBB -> 归一化 float[4] */
 static void nui_colorf(uint32_t hex, float out[4]) {
     out[0] = ((hex >> 16) & 0xFF) / 255.0f;
     out[1] = ((hex >> 8) & 0xFF) / 255.0f;
@@ -131,7 +49,50 @@ static void nui_colorf(uint32_t hex, float out[4]) {
     out[3] = 1.0f;
 }
 
-static void focus_view(struct openos_view *view, struct wlr_surface *surface) {
+/* ---- 窗口动画 ---- */
+static void view_animate_in(struct openos_view *view) {
+    view->anim_opacity = 0.0;
+    view->anim_scale = 0.85;
+    view->animating_in = true;
+    view->animating_out = false;
+}
+
+static void view_animate_out(struct openos_view *view) {
+    view->anim_opacity = 1.0;
+    view->anim_scale = 1.0;
+    view->animating_in = false;
+    view->animating_out = true;
+}
+
+static void update_animations(struct openos_server *server) {
+    struct openos_view *view;
+    wl_list_for_each(view, &server->views, link) {
+        if (view->animating_in) {
+            view->anim_opacity += 0.08f;
+            view->anim_scale += 0.015f;
+            if (view->anim_opacity >= 1.0f) {
+                view->anim_opacity = 1.0f;
+                view->anim_scale = 1.0f;
+                view->animating_in = false;
+            }
+        }
+        if (view->animating_out) {
+            view->anim_opacity -= 0.08f;
+            view->anim_scale -= 0.015f;
+            if (view->anim_opacity <= 0.0f) {
+                view->anim_opacity = 0.0f;
+                view->anim_scale = 0.0f;
+                view->animating_out = false;
+                /* 动画完成后真正销毁 */
+                if (view->scene_tree)
+                    wlr_scene_node_set_enabled(&view->scene_tree->node, false);
+            }
+        }
+    }
+}
+
+/* ---- 聚焦 ---- */
+void focus_view(struct openos_view *view, struct wlr_surface *surface) {
     if (view == NULL) return;
     struct openos_server *s = view->server;
     struct wlr_seat *seat = s->seat;
@@ -140,8 +101,6 @@ static void focus_view(struct openos_view *view, struct wlr_surface *surface) {
 
     if (prev) wlr_seat_keyboard_notify_clear_focus(seat);
 
-    /* 重置所有视图边框为中性色, 当前视图设为强调色;
-     * 同步任务栏 (foreign-toplevel) 激活状态 */
     struct openos_view *v;
     wl_list_for_each(v, &s->views, link) {
         float dim[4]; nui_colorf(NUI_SURFACE_4, dim);
@@ -161,19 +120,16 @@ static void focus_view(struct openos_view *view, struct wlr_surface *surface) {
                                        kb->num_keycodes, &kb->modifiers);
 }
 
-/* 切换工作区: 只显示目标工作区, 并聚焦其最上层窗口 */
-static void switch_workspace(struct openos_server *s, int idx) {
+/* ---- 工作区切换 ---- */
+void switch_workspace(struct openos_server *s, int idx) {
     if (idx < 0 || idx >= WORKSPACE_COUNT) return;
     if (idx == s->current_workspace) return;
     s->current_workspace = idx;
     for (int i = 0; i < WORKSPACE_COUNT; i++)
         wlr_scene_node_set_enabled(&s->workspaces[i]->node, i == idx);
-    /* 广播工作区状态给切换器 UI */
     if (s->workspace_mgr)
         openos_workspace_set_active(s->workspace_mgr, idx);
-    /* 取消正在进行的拖拽 */
     s->grabbed_surface = NULL;
-    /* 聚焦该工作区最后一个映射的窗口 */
     struct openos_view *target = NULL, *it;
     wl_list_for_each(it, &s->views, link)
         if (it->workspace == idx && it->mapped) target = it;
@@ -216,7 +172,10 @@ static void on_view_map(struct wl_listener *l, void *data) {
     struct openos_view *v = wl_container_of(l, v, map);
     v->mapped = true;
     struct wlr_xdg_toplevel *t = v->xdg_toplevel;
-    /* 同步任务栏标题/图标标识 */
+
+    /* 启动进入动画 */
+    view_animate_in(v);
+
     if (v->ft_handle) {
         if (t->title)
             wlr_foreign_toplevel_handle_v1_set_title(v->ft_handle, t->title);
@@ -226,10 +185,10 @@ static void on_view_map(struct wl_listener *l, void *data) {
     struct wlr_box geo;
     wlr_xdg_toplevel_get_geometry(t, &geo);
     if (geo.x == 0 && geo.y == 0) {
-        /* 居中放置 */
         struct wlr_box *o = wlr_output_layout_get_box(v->server->output_layout, NULL);
         wlr_scene_node_set_position(&v->scene_tree->node,
-            (o->width - geo.width) / 2, (o->height - geo.height) / 2 + 24);
+            (o->width - geo.width) / 2,
+            (o->height - geo.height) / 2 + 24);
     }
     focus_view(v, t->base->surface);
 }
@@ -246,6 +205,7 @@ static void on_view_unmap(struct wl_listener *l, void *data) {
 static void on_view_destroy(struct wl_listener *l, void *data) {
     (void)data;
     struct openos_view *v = wl_container_of(l, v, destroy);
+    deco_destroy(&v->deco);
     if (v->ft_handle) {
         wlr_foreign_toplevel_handle_v1_destroy(v->ft_handle);
         v->ft_handle = NULL;
@@ -291,15 +251,23 @@ static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
     assert(v);
     v->server = s;
     v->xdg_toplevel = toplevel;
+    v->anim_opacity = 1.0;
+    v->anim_scale = 1.0;
 
     const int BORDER = 1;
     v->workspace = s->current_workspace;
     v->scene_tree = wlr_scene_tree_create(s->workspaces[v->workspace]);
     float bcol[4]; nui_colorf(NUI_SURFACE_4, bcol);
     v->border = wlr_scene_rect_create(&v->scene_tree->node, 100, 100, bcol);
+
+    /* 创建窗口装饰 (标题栏 + 按钮) */
+    deco_create(&v->deco, v->scene_tree, 100);
+
+    /* 场景表面在装饰下方 (标题栏之下) */
     v->scene_surface = wlr_scene_surface_create(&v->scene_tree->node,
                                                 toplevel->base->surface);
-    wlr_scene_node_set_position(&v->scene_surface->node, BORDER, BORDER);
+    wlr_scene_node_set_position(&v->scene_surface->node,
+                                DECO_BORDER_W, deco_titlebar_height());
 
     v->map.notify = on_view_map;
     wl_signal_add(&toplevel->base->events.map, &v->map);
@@ -316,7 +284,7 @@ static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
     v->request_fullscreen.notify = on_request_fullscreen;
     wl_signal_add(&toplevel->events.request_fullscreen, &v->request_fullscreen);
 
-    /* 任务栏数据源: foreign-toplevel 句柄 */
+    /* 任务栏句柄 */
     if (s->foreign_toplevel) {
         v->ft_handle = wlr_foreign_toplevel_handle_v1_create(s->foreign_toplevel);
         if (v->ft_handle) {
@@ -332,7 +300,7 @@ static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
     wl_list_insert(&s->views, &v->link);
 }
 
-/* ---- foreign-toplevel 请求 (任务栏按钮动作) ---- */
+/* ---- foreign-toplevel 请求 ---- */
 static void ft_request_activate_handler(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, ft_request_activate);
     struct wlr_foreign_toplevel_handle_v1_activated_event *ev = data;
@@ -357,13 +325,13 @@ static void ft_request_maximize_handler(struct wl_listener *l, void *data) {
     if (v) wlr_xdg_toplevel_set_maximized(v->xdg_toplevel, ev->maximized);
 }
 
-/* 工作区切换器 UI 的激活请求 */
+/* 工作区切换器 UI 激活请求 */
 static void on_workspace_activate(void *data, int idx) {
     struct openos_server *s = data;
     switch_workspace(s, idx);
 }
 
-/* ---- layer-shell: 面板/启动器/通知 等桌面层 ---- */
+/* ---- layer-shell ---- */
 static void on_layer_destroy(struct wl_listener *l, void *data) {
     (void)data;
     struct openos_layer *lay = wl_container_of(l, lay, destroy);
@@ -396,7 +364,6 @@ static void on_new_layer_surface(struct wl_listener *l, void *data) {
     assert(lay);
     lay->server = s;
     lay->layer_surface = ls;
-    /* 面板/菜单/通知 挂到 blur_tree, 其下方桌面内容将被动态模糊 */
     struct wlr_scene_tree *parent = is_blur_namespace(ls->namespace)
         ? s->blur_tree : &s->scene->tree;
     lay->scene_layer = wlr_scene_layer_surface_v1_create(parent, ls);
@@ -422,7 +389,10 @@ static void on_output_frame(struct wl_listener *l, void *data) {
     struct openos_output *o = wl_container_of(l, o, frame);
     struct wlr_scene_output *so = o->scene_output;
     struct openos_server *s = o->server;
-    /* 有模糊层内容时走动态模糊管线, 否则常规提交 */
+
+    /* 更新窗口动画 */
+    update_animations(s);
+
     float bg[4]; nui_colorf(NUI_SURFACE_0, bg);
     if (!openos_blur_render(s->renderer, s->allocator, o->wlr_output, so,
                             s->scene, s->blur_tree, bg))
@@ -456,16 +426,20 @@ static void on_new_output(struct wl_listener *l, void *data) {
     wl_list_insert(&s->outputs, &o->link);
 }
 
-/* ---- 输入: 键盘 ---- */
+/* ---- 键盘 ---- */
 static void on_keyboard_key(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, keyboard_key);
     struct wlr_keyboard_key_event *e = data;
     struct wlr_seat *seat = s->seat;
     struct wlr_keyboard *kb = wlr_seat_get_keyboard(seat);
-    /* 快捷键: Esc 关闭焦点窗口; Ctrl+1..4 切换工作区; Ctrl+Tab 下一工作区 */
+
     if (kb && e->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
         bool ctrl = xkb_state_mod_name_is_active(kb->xkb_state,
             XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE);
+        bool alt = xkb_state_mod_name_is_active(kb->xkb_state,
+            XKB_MOD_NAME_ALT, XKB_STATE_MODS_EFFECTIVE);
+        bool meta = xkb_state_mod_name_is_active(kb->xkb_state,
+            XKB_MOD_NAME_LOGO, XKB_STATE_MODS_EFFECTIVE);
         const xkb_keysym_t *syms;
         unsigned n = xkb_state_key_get_syms(kb->xkb_state, e->keycode, &syms);
         for (unsigned i = 0; i < n; i++) {
@@ -475,12 +449,56 @@ static void on_keyboard_key(struct wl_listener *l, void *data) {
                 switch_workspace(s, (s->current_workspace + 1) % WORKSPACE_COUNT);
             } else if (syms[i] == XKB_KEY_Escape) {
                 struct wlr_surface *f = seat->keyboard_state.focused_surface;
-                if (f) wlr_xdg_toplevel_send_close(
-                    wlr_xdg_surface_from_wlr_surface(f)->toplevel);
+                if (f) {
+                    struct wlr_xdg_surface *xdg =
+                        wlr_xdg_surface_from_wlr_surface(f);
+                    if (xdg && xdg->toplevel)
+                        wlr_xdg_toplevel_send_close(xdg->toplevel);
+                }
+            }
+            /* 分屏平铺: Meta + Left/Right = 左/右半屏 */
+            if (meta && syms[i] == XKB_KEY_Left) {
+                tile_focused(s, TILE_LEFT);
+            } else if (meta && syms[i] == XKB_KEY_Right) {
+                tile_focused(s, TILE_RIGHT);
+            } else if (meta && syms[i] == XKB_KEY_Up) {
+                tile_focused(s, TILE_FULL);
+            } else if (meta && syms[i] == XKB_KEY_Down) {
+                tile_focused(s, TILE_CENTER);
+            }
+            /* 窗口装饰: Meta + W = 关闭 */
+            if (meta && syms[i] == XKB_KEY_w) {
+                struct wlr_surface *f = seat->keyboard_state.focused_surface;
+                if (f) {
+                    struct wlr_xdg_surface *xdg =
+                        wlr_xdg_surface_from_wlr_surface(f);
+                    if (xdg && xdg->toplevel)
+                        wlr_xdg_toplevel_send_close(xdg->toplevel);
+                }
+            }
+            /* Meta + M = 最大化 */
+            if (meta && syms[i] == XKB_KEY_m) {
+                struct wlr_surface *f = seat->keyboard_state.focused_surface;
+                if (f) {
+                    struct wlr_xdg_surface *xdg =
+                        wlr_xdg_surface_from_wlr_surface(f);
+                    if (xdg && xdg->toplevel) {
+                        wlr_xdg_toplevel_set_maximized(xdg->toplevel,
+                            !xdg->toplevel->requested.maximized);
+                    }
+                }
             }
         }
     }
     wlr_seat_keyboard_notify_key(seat, e->time_msec, e->keycode, e->state);
+}
+
+static void on_keyboard_modifiers(struct wl_listener *l, void *data) {
+    (void)data;
+    struct openos_server *s = wl_container_of(l, s, keyboard_modifiers);
+    struct wlr_keyboard *kb = wlr_seat_get_keyboard(s->seat);
+    if (kb)
+        wlr_seat_keyboard_notify_modifiers(s->seat, &kb->modifiers);
 }
 
 static void on_keyboard_destroy(struct wl_listener *l, void *data) {
@@ -488,9 +506,10 @@ static void on_keyboard_destroy(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, keyboard_destroy);
     wl_list_remove(&s->keyboard_key.link);
     wl_list_remove(&s->keyboard_destroy.link);
+    wl_list_remove(&s->keyboard_modifiers.link);
 }
 
-/* ---- 输入: 通用 new_input ---- */
+/* ---- 输入 ---- */
 static void on_new_input(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, new_input);
     struct wlr_input_device *dev = data;
@@ -501,14 +520,28 @@ static void on_new_input(struct wl_listener *l, void *data) {
         wlr_keyboard_set_repeat_info(kb, 25, 600);
         s->keyboard_key.notify = on_keyboard_key;
         wl_signal_add(&kb->events.key, &s->keyboard_key);
+        s->keyboard_modifiers.notify = on_keyboard_modifiers;
+        wl_signal_add(&kb->events.modifiers, &s->keyboard_modifiers);
         s->keyboard_destroy.notify = on_keyboard_destroy;
         wl_signal_add(&dev->events.destroy, &s->keyboard_destroy);
         wlr_seat_set_keyboard(s->seat, kb);
         break;
     }
-    case WLR_INPUT_DEVICE_POINTER:
+    case WLR_INPUT_DEVICE_POINTER: {
+        struct wlr_pointer *ptr = wlr_pointer_from_input_device(dev);
         wlr_cursor_attach_input_device(s->cursor, dev);
+        /* 注册触摸板手势事件 */
+        s->gesture_swipe_begin.notify = handle_gesture_swipe_begin;
+        wl_signal_add(&ptr->events.gesture_swipe_begin,
+                      &s->gesture_swipe_begin);
+        s->gesture_swipe_update.notify = handle_gesture_swipe_update;
+        wl_signal_add(&ptr->events.gesture_swipe_update,
+                      &s->gesture_swipe_update);
+        s->gesture_swipe_end.notify = handle_gesture_swipe_end;
+        wl_signal_add(&ptr->events.gesture_swipe_end,
+                      &s->gesture_swipe_end);
         break;
+    }
     default:
         break;
     }
@@ -518,7 +551,7 @@ static void on_new_input(struct wl_listener *l, void *data) {
     wlr_seat_set_capabilities(s->seat, caps);
 }
 
-/* ---- 指针: 移动 / 拖拽 ---- */
+/* ---- 指针 ---- */
 static void on_cursor_motion(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, cursor_motion);
     struct wlr_pointer_motion_event *e = data;
@@ -537,6 +570,48 @@ static void on_cursor_button(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, cursor_button);
     struct wlr_pointer_button_event *e = data;
     wlr_seat_pointer_notify_button(s->seat, e->time_msec, e->button, e->state);
+
+    /* 处理装饰按钮点击 */
+    if (e->state == WL_POINTER_BUTTON_STATE_PRESSED) {
+        struct wlr_surface *f = s->seat->pointer_state.focused_surface;
+        if (f) {
+            struct openos_view *v;
+            wl_list_for_each(v, &s->views, link) {
+                if (v->xdg_toplevel &&
+                    v->xdg_toplevel->base->surface == f) {
+                    /* 命中测试装饰 */
+                    double sx = s->cursor->x;
+                    double sy = s->cursor->y;
+                    double node_x = 0, node_y = 0;
+                    if (wlr_scene_node_coords(&v->scene_tree->node,
+                                              &node_x, &node_y)) {
+                        int hit = deco_hit_test(&v->deco,
+                            sx - node_x, sy - node_y);
+                        if (hit == 1) {
+                            wlr_xdg_toplevel_send_close(v->xdg_toplevel);
+                        } else if (hit == 2) {
+                            wlr_xdg_toplevel_set_maximized(v->xdg_toplevel,
+                                !v->xdg_toplevel->requested.maximized);
+                        } else if (hit == 4 || hit == 5) {
+                            /* 标题栏/控制块拖拽: 模拟 request_move */
+                            if (v->xdg_toplevel->base->surface) {
+                                s->grabbed_surface = v->xdg_toplevel->base->surface;
+                                s->grab_x = s->cursor->x;
+                                s->grab_y = s->cursor->y;
+                                struct wlr_box geo;
+                                wlr_xdg_toplevel_get_geometry(
+                                    v->xdg_toplevel, &geo);
+                                s->grab_geobox_x = geo.x;
+                                s->grab_geobox_y = geo.y;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     if (e->state == WL_POINTER_BUTTON_STATE_RELEASED)
         s->grabbed_surface = NULL;
     on_cursor_update(s);
@@ -563,8 +638,8 @@ static void on_request_cursor(struct wl_listener *l, void *data) {
         wlr_cursor_set_surface(s->cursor, e->surface, e->hotspot_x, e->hotspot_y);
 }
 
-/* 指针移动后: 命中测试 + 拖拽窗口 */
-static void on_cursor_update(struct openos_server *s) {
+/* 指针更新: 命中测试 + 拖拽 + 装饰 hover */
+void on_cursor_update(struct openos_server *s) {
     if (s->grabbed_surface) {
         struct wlr_surface *surf = s->grabbed_surface;
         struct openos_view *v = NULL;
@@ -584,8 +659,29 @@ static void on_cursor_update(struct openos_server *s) {
     if (node && node->type == WLR_SCENE_NODE_SURFACE) {
         struct wlr_surface *surf = wlr_scene_surface_from_node(node)->surface;
         wlr_seat_pointer_notify_enter(s->seat, surf, s->cursor->x, s->cursor->y);
+
+        /* 更新装饰 hover */
+        struct openos_view *v;
+        wl_list_for_each(v, &s->views, link) {
+            if (v->scene_surface &&
+                &v->scene_surface->node == node) {
+                double nx = 0, ny = 0;
+                if (wlr_scene_node_coords(&v->scene_tree->node, &nx, &ny)) {
+                    deco_set_hover(&v->deco,
+                        s->cursor->x - nx, s->cursor->y - ny);
+                }
+                break;
+            } else {
+                deco_clear_hover(&v->deco);
+            }
+        }
     } else {
         wlr_seat_pointer_notify_enter(s->seat, NULL, s->cursor->x, s->cursor->y);
+        /* 清除所有装饰 hover */
+        struct openos_view *v;
+        wl_list_for_each(v, &s->views, link) {
+            deco_clear_hover(&v->deco);
+        }
     }
     wlr_xcursor_manager_set_cursor_image(s->xcursor_mgr, "left_ptr", s->cursor);
 }
@@ -606,13 +702,12 @@ int main(int argc, char *argv[]) {
     server.scene = wlr_scene_create();
     server.scene_layout = wlr_scene_output_layout_create(server.scene, server.output_layout);
 
-    /* 多工作区: 4 棵子树, 默认只启用第 0 个 */
+    /* 多工作区 */
     for (int i = 0; i < WORKSPACE_COUNT; i++) {
         server.workspaces[i] = wlr_scene_tree_create(&server.scene->tree);
         wlr_scene_node_set_enabled(&server.workspaces[i]->node, i == 0);
     }
     server.current_workspace = 0;
-    /* 模糊层树: 后创建, 渲染时位于窗口之上 */
     server.blur_tree = wlr_scene_tree_create(&server.scene->tree);
 
     float bg[4]; nui_colorf(NUI_SURFACE_0, bg);
@@ -622,7 +717,6 @@ int main(int argc, char *argv[]) {
     wlr_data_device_manager_create(server.display);
     server.xdg_shell = wlr_xdg_shell_create(server.display);
     server.layer_shell = wlr_layer_shell_v1_create(server.display);
-    /* 任务栏窗口列表 (标准协议) + 工作区切换器 (自研协议) */
     server.foreign_toplevel = wlr_foreign_toplevel_manager_v1_create(server.display);
     server.workspace_mgr = openos_workspace_manager_create(server.display,
         WORKSPACE_COUNT, 0, on_workspace_activate, &server);
@@ -664,13 +758,16 @@ int main(int argc, char *argv[]) {
     server.request_cursor.notify = on_request_cursor;
     wl_signal_add(&server.seat->events.request_set_cursor, &server.request_cursor);
 
+    /* 初始化手势 */
+    gestures_init(&server);
+
     const char *sock = wl_display_add_socket_auto(server.display);
     if (!sock) {
         wlr_backend_destroy(server.backend);
         return 1;
     }
     wlr_log(WLR_INFO, "OPENOS DE (Wayland) 已启动. WAYLAND_DISPLAY=%s", sock);
-    wlr_log(WLR_INFO, "NUI2 主题: 20 层深色 / 强调色 Cyan");
+    wlr_log(WLR_INFO, "NUI2 主题: 20 层深色 / 强调色 Cyan / 窗口装饰 / 手势 / 平铺");
 
     wlr_backend_start(server.backend);
     wl_display_run(server.display);

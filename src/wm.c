@@ -1,7 +1,12 @@
 /* OPENOS 桌面环境 — 窗口管理器 (基础重父化 WM)
- * 功能: 接管客户端窗口、加标题栏、拖拽移动、关闭按钮。
+ * 功能: 接管客户端窗口、加悬浮标题栏、拖拽移动、关闭按钮。
+ * 悬浮设计: 标题栏(左) + 控制按钮(右) 两个独立块
+ * Windows 风格: 关闭/最大化/最小化按钮在右侧
  */
 #include "de.h"
+
+/* 按钮区域枚举 */
+enum { BTN_NONE, BTN_CLOSE, BTN_MAX, BTN_MIN };
 
 typedef struct {
     Window client;
@@ -64,13 +69,16 @@ void wm_handle_map_request(XMapRequestEvent *e) {
     if (w <= 0) w = 480;
     if (h <= 0) h = 320;
 
-    Window frame = XCreateSimpleWindow(dpy, root, x, y, w, h + TITLE_HEIGHT,
+    /* 悬浮装饰: 标题栏高度包含浮动间距 */
+    int deco_h = TITLE_HEIGHT + FLOATING_MARGIN * 2;
+
+    Window frame = XCreateSimpleWindow(dpy, root, x, y, w, h + deco_h,
                                         1, BlackPixel(dpy, screen),
                                         WhitePixel(dpy, screen));
     XSelectInput(dpy, frame,
                  SubstructureRedirectMask | SubstructureNotifyMask |
                  ButtonPressMask | ExposureMask);
-    XReparentWindow(dpy, e->window, frame, 0, TITLE_HEIGHT);
+    XReparentWindow(dpy, e->window, frame, 0, deco_h);
     XAddToSaveSet(dpy, e->window);
     XMapWindow(dpy, frame);
     XMapWindow(dpy, e->window);
@@ -89,49 +97,127 @@ void wm_handle_map_request(XMapRequestEvent *e) {
     wm_draw_frame(frame);
 }
 
+/* 检查按钮命中: 相对 frame 坐标 */
+static int hit_button(Client *c, int x, int y) {
+    /* 只检查装饰区域 */
+    int deco_h = TITLE_HEIGHT + FLOATING_MARGIN * 2;
+    if (y < 0 || y > deco_h) return BTN_NONE;
+
+    /* 控制块按钮区 (右侧) */
+    int cx = c->w - CONTROLS_W - FLOATING_MARGIN;
+    int btn_right = CONTROLS_W - FLOATING_MARGIN;
+    int btn_center_y = (TITLE_HEIGHT - BTN_H) / 2 + FLOATING_MARGIN;
+
+    /* 关闭按钮 (最右) */
+    int cbx = cx + btn_right - BTN_W;
+    if (x >= cbx && x < cbx + BTN_W &&
+        y >= btn_center_y && y < btn_center_y + BTN_H)
+        return BTN_CLOSE;
+
+    /* 最大化按钮 (中间) */
+    int mbx = cx + btn_right - BTN_W - BTN_GAP - BTN_W;
+    if (x >= mbx && x < mbx + BTN_W &&
+        y >= btn_center_y && y < btn_center_y + BTN_H)
+        return BTN_MAX;
+
+    /* 最小化按钮 (左) */
+    int mnbx = cx + btn_right - 2 * (BTN_W + BTN_GAP) - BTN_W;
+    if (x >= mnbx && x < mnbx + BTN_W &&
+        y >= btn_center_y && y < btn_center_y + BTN_H)
+        return BTN_MIN;
+
+    return BTN_NONE;
+}
+
 void wm_draw_frame(Window frame) {
     Client *c = find_client(frame);
     if (!c) return;
     GC gc = XDefaultGC(dpy, screen);
 
-    XClearArea(dpy, frame, 0, 0, c->w, TITLE_HEIGHT, False);
-    XSetForeground(dpy, gc, BlackPixel(dpy, screen));
-    XFillRectangle(dpy, frame, gc, 0, 0, c->w, TITLE_HEIGHT);
+    int deco_h = TITLE_HEIGHT + FLOATING_MARGIN * 2;
 
+    /* 清空装饰区 */
+    XClearArea(dpy, frame, 0, 0, c->w, deco_h, False);
+
+    /* 背景色 (dark surface) */
+    XSetForeground(dpy, gc, 0x141414);
+
+    /* ---- 左: 悬浮标题栏 ---- */
+    XFillRectangle(dpy, frame, gc, FLOATING_MARGIN, FLOATING_MARGIN,
+                   TITLE_BAR_W, TITLE_HEIGHT);
+
+    /* 窗口名称 */
     char name[256] = "OPENOS";
     XFetchName(dpy, c->client, name);
-    XSetForeground(dpy, gc, WhitePixel(dpy, screen));
-    XDrawString(dpy, frame, gc, 6, 16, name, strlen(name));
+    XSetForeground(dpy, gc, 0xF5F5F5);
+    XDrawString(dpy, frame, gc, FLOATING_MARGIN + 10,
+                FLOATING_MARGIN + TITLE_HEIGHT / 2 + 5,
+                name, strlen(name));
 
-    /* 关闭按钮 (右上角方框 + 叉) */
-    int bx = c->w - 18;
-    XDrawRectangle(dpy, frame, gc, bx, 4, 14, 14);
-    XDrawLine(dpy, frame, gc, bx + 3, 7, bx + 13, 17);
-    XDrawLine(dpy, frame, gc, bx + 3, 17, bx + 13, 7);
+    /* ---- 右: 悬浮控制块 ---- */
+    int cx = c->w - CONTROLS_W - FLOATING_MARGIN;
+    XSetForeground(dpy, gc, 0x141414);
+    XFillRectangle(dpy, frame, gc, cx, FLOATING_MARGIN,
+                   CONTROLS_W, TITLE_HEIGHT);
+
+    /* 按钮从右到左排列 */
+    int btn_right = CONTROLS_W - FLOATING_MARGIN;
+    int btn_center_y = FLOATING_MARGIN + (TITLE_HEIGHT - BTN_H) / 2;
+
+    /* 关闭按钮 (最右, 红色) */
+    XSetForeground(dpy, gc, 0x882222);
+    XFillRectangle(dpy, frame, gc,
+                   cx + btn_right - BTN_W, btn_center_y, BTN_W, BTN_H);
+    XSetForeground(dpy, gc, 0xFFFFFF);
+    XDrawString(dpy, frame, gc,
+                cx + btn_right - BTN_W + 7, btn_center_y + 15, "x", 1);
+
+    /* 最大化按钮 (中间) */
+    XSetForeground(dpy, gc, 0x333333);
+    XFillRectangle(dpy, frame, gc,
+                   cx + btn_right - BTN_W - BTN_GAP - BTN_W,
+                   btn_center_y, BTN_W, BTN_H);
+    XSetForeground(dpy, gc, 0xCCCCCC);
+    XDrawRectangle(dpy, frame, gc,
+                   cx + btn_right - BTN_W - BTN_GAP - BTN_W + 5,
+                   btn_center_y + 5, BTN_W - 10, BTN_H - 10);
+
+    /* 最小化按钮 (左) */
+    XSetForeground(dpy, gc, 0x333333);
+    XFillRectangle(dpy, frame, gc,
+                   cx + btn_right - 2 * (BTN_W + BTN_GAP) - BTN_W,
+                   btn_center_y, BTN_W, BTN_H);
+    XSetForeground(dpy, gc, 0xCCCCCC);
+    XDrawLine(dpy, frame, gc,
+              cx + btn_right - 2 * (BTN_W + BTN_GAP) - BTN_W + 5,
+              btn_center_y + BTN_H / 2,
+              cx + btn_right - 2 * (BTN_W + BTN_GAP) - BTN_W + BTN_W - 5,
+              btn_center_y + BTN_H / 2);
 }
 
 void wm_handle_button(XButtonEvent *e) {
     Client *c = find_client(e->window);
     if (!c) return;
-    if (e->window == c->frame && e->y < TITLE_HEIGHT) {
-        if (e->x > c->w - 20) {                 /* 关闭 */
-            XClientMessageEvent cm;
-            memset(&cm, 0, sizeof cm);
-            cm.type = ClientMessage;
-            cm.window = c->client;
-            cm.message_type = a_wm_delete;
-            cm.format = 32;
-            cm.data.l[0] = a_wm_delete;
-            XSendEvent(dpy, c->client, False, NoEventMask, (XEvent *)&cm);
-            XSync(dpy, False);
-        } else {                                /* 开始拖拽 */
-            dragging = c->frame;
-            drag_off_x = e->x;
-            drag_off_y = e->y;
-            XGrabPointer(dpy, c->frame, False,
-                         PointerMotionMask | ButtonReleaseMask,
-                         GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
-        }
+
+    int btn = hit_button(c, e->x, e->y);
+    if (btn == BTN_CLOSE) {
+        XClientMessageEvent cm;
+        memset(&cm, 0, sizeof cm);
+        cm.type = ClientMessage;
+        cm.window = c->client;
+        cm.message_type = a_wm_delete;
+        cm.format = 32;
+        cm.data.l[0] = a_wm_delete;
+        XSendEvent(dpy, c->client, False, NoEventMask, (XEvent *)&cm);
+        XSync(dpy, False);
+    } else if (btn == BTN_NONE && e->y < TITLE_HEIGHT + FLOATING_MARGIN * 2) {
+        /* 在装饰区 (非按钮) 开始拖拽 */
+        dragging = c->frame;
+        drag_off_x = e->x;
+        drag_off_y = e->y;
+        XGrabPointer(dpy, c->frame, False,
+                     PointerMotionMask | ButtonReleaseMask,
+                     GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
     }
 }
 
@@ -163,10 +249,11 @@ void wm_handle_configure_request(XConfigureRequestEvent *e) {
         XConfigureWindow(dpy, e->window, e->value_mask, &wc);
         return;
     }
+    int deco_h = TITLE_HEIGHT + FLOATING_MARGIN * 2;
     if (e->value_mask & CWWidth)  c->w = e->width;
     if (e->value_mask & CWHeight) c->h = e->height;
-    XResizeWindow(dpy, c->frame, c->w, c->h + TITLE_HEIGHT);
-    XMoveResizeWindow(dpy, c->client, 0, TITLE_HEIGHT, c->w, c->h);
+    XResizeWindow(dpy, c->frame, c->w, c->h + deco_h);
+    XMoveResizeWindow(dpy, c->client, 0, deco_h, c->w, c->h);
     wm_draw_frame(c->frame);
 }
 

@@ -17,7 +17,15 @@
 
 #define OPENOS_DE_VERSION "DEV2026.1"
 #define PANEL_HEIGHT 24
-#define TITLE_HEIGHT 22
+
+/* 悬浮窗口装饰 */
+#define TITLE_HEIGHT     28
+#define TITLE_BAR_W      120
+#define CONTROLS_W       80
+#define FLOATING_MARGIN  6
+#define BTN_W            22
+#define BTN_H            22
+#define BTN_GAP          4
 
 /* 共享状态 (在 main.c 中定义) */
 extern Display *dpy;

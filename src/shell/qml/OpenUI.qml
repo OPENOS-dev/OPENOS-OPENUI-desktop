@@ -35,6 +35,11 @@ QtObject {
     readonly property color surfaceBright: "#1F1F1F"
     readonly property color surface6:   "#3F3F3F"
 
+    // ---- 状态色 ----
+    readonly property color statusSuccess: "#4CAF50"
+    readonly property color statusWarning: "#FFC107"
+    readonly property color statusError:   "#F44336"
+
     // ---- 文本 ----
     readonly property color onSurface:        "#F5F5F5"
     readonly property color onSurfaceVariant: "#B0B0B0"
@@ -66,6 +71,7 @@ QtObject {
     readonly property int sp2: 8
     readonly property int sp3: 12
     readonly property int sp4: 16
+    readonly property int sp5: 20
     readonly property int sp6: 24
     readonly property int sp8: 32
 

@@ -23,6 +23,25 @@ Window {
     Shortcut { sequence: "Ctrl+S";  onActivated: settingsWin.visible = true }
     Shortcut { sequence: "Ctrl+P";  onActivated: optWin.visible = true }
     Shortcut { sequence: "Ctrl+V";  onActivated: vmappWin.visible = true }
+    Shortcut { sequence: "Ctrl+M";  onActivated: sysMonWin.visible = true }
+    Shortcut { sequence: "Shift+Ctrl+S"; onActivated: screenshotWin.visible = true }
+    Shortcut { sequence: "Shift+Ctrl+C"; onActivated: clipboardWin.visible = true }
+    Shortcut { sequence: "Ctrl+R";  onActivated: recorderWin.visible = true }
+    Shortcut { sequence: "Shift+Ctrl+F"; onActivated: fileSearch.visible = true }
+    Shortcut { sequence: "Shift+Ctrl+T"; onActivated: tilingPanel.visible = !tilingPanel.visible }
+    Shortcut { sequence: "Ctrl+N";  onActivated: notesWin.visible = !notesWin.visible }
+    Shortcut { sequence: "Alt+C";   onActivated: calcWin.visible = !calcWin.visible }
+    Shortcut { sequence: "Alt+F";   onActivated: fmWin.visible = !fmWin.visible }
+    Shortcut { sequence: "Alt+T";   onActivated: termWin.visible = !termWin.visible }
+    Shortcut { sequence: "Ctrl+E";  onActivated: editorWin.visible = !editorWin.visible }
+    Shortcut { sequence: "Ctrl+W";  onActivated: widgetWin.visible = !widgetWin.visible }
+    Shortcut { sequence: "Ctrl+B";  onActivated: appearanceWin.visible = !appearanceWin.visible }
+    Shortcut { sequence: "Ctrl+Shift+K"; onActivated: kbdWin.visible = !kbdWin.visible }
+    Shortcut { sequence: "Shift+Ctrl+D"; onActivated: diskWin.visible = !diskWin.visible }
+    Shortcut { sequence: "Alt+P"; onActivated: colorWin.visible = !colorWin.visible }
+    Shortcut { sequence: "Alt+M";   onActivated: mediaWin.visible = !mediaWin.visible }
+    Shortcut { sequence: "Alt+I";   onActivated: imageWin.visible = !imageWin.visible }
+    Shortcut { sequence: "Alt+Shift+C"; onActivated: clockWin.visible = !clockWin.visible }
 
     // ===== 面板层 (顶部) =====
     Panel {
@@ -43,6 +62,13 @@ Window {
             id: lockScreen
             anchors.fill: parent
             z: 10
+        }
+
+        // 登录屏 (锁屏切换用户时显示)
+        LoginScreen {
+            id: loginScreen
+            anchors.fill: parent
+            z: 11
         }
 
         // 命令面板 (居中)
@@ -75,10 +101,56 @@ Window {
         }
     }
 
-    // ===== 独立窗口 (设置/opt/隔离) =====
-    SettingsCenter { id: settingsWin }
-    OptManagerUI   { id: optWin }
-    VmappManager   { id: vmappWin }
+    // ===== 独立窗口 (设置/opt/隔离/系统工具) =====
+    SettingsCenter  { id: settingsWin }
+    OptManagerUI    { id: optWin }
+    VmappManager    { id: vmappWin }
+    SystemMonitor   { id: sysMonWin }        // Ctrl+M
+    Screenshot      { id: screenshotWin }    // Shift+Ctrl+S
+    Clipboard       { id: clipboardWin }     // Shift+Ctrl+C
+    ScreenRecorder  { id: recorderWin }      // Ctrl+R
+
+    // 便签
+    Notes { id: notesWin }
+    // 计算器
+    Calculator { id: calcWin }
+    // 文件管理器
+    FileManager { id: fmWin }
+    // 终端
+    Terminal { id: termWin }
+    // 文本编辑器
+    TextEditor { id: editorWin }
+    // 桌面小部件
+    DesktopWidgets { id: widgetWin }
+    // 外观设置
+    AppearanceSettings { id: appearanceWin }
+    // 屏幕键盘
+    VirtualKeyboard { id: kbdWin }
+    // 磁盘分析
+    DiskUsage { id: diskWin }
+    // 取色器
+    ColorPicker { id: colorWin }
+    // 媒体播放器
+    MediaPlayer { id: mediaWin }
+    // 时钟
+    Clock { id: clockWin }
+    // 图片查看器
+    ImageViewer { id: imageWin }
+
+    // 文件搜索 (覆盖层)
+    FileSearch {
+        id: fileSearch
+        anchors.fill: parent
+        z: 150
+    }
+
+    // 窗口分屏面板 (弹出层, 定位面板下方)
+    TilingManager {
+        id: tilingPanel
+        z: 50
+        x: (shellWindow.width - width) / 2
+        y: OpenUI.panelHeight + 4
+    }
 
     // 通知窗口 (右上角)
     Window {

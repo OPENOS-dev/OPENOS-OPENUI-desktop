@@ -1,0 +1,41 @@
+import QtQuick 2.15; import QtQuick.Window 2.15
+Window { id: win; visible: false; width: 600; height: 420; minimumWidth: 360; minimumHeight: 280; flags: Qt.FramelessWindowHint; title: "图片查看器"; color: "transparent"
+  property bool gridMode: true; property int currentIndex: -1; property int zoomLevel: 100; property int dragX: 0; property int dragY: 0; property bool dragging: false
+  property var images: [{n:"示例 1",c:"#E65100"},{n:"示例 2",c:"#00695C"},{n:"示例 3",c:"#1B5E20"},{n:"示例 4",c:"#37474F"},{n:"示例 5",c:"#1A237E"},{n:"示例 6",c:"#AD1457"},{n:"示例 7",c:"#33691E"},{n:"示例 8",c:"#0D47A1"}]
+  Rectangle { anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 6; z: 10; width: 22; height: 22; radius: OpenUI.shapeFull
+    color: ch.hovered ? Qt.rgba(OpenUI.error.r,OpenUI.error.g,OpenUI.error.b,0.3) : "transparent"
+    Text { anchors.centerIn: parent; text: "\u00D7"; color: ch.hovered ? OpenUI.error : OpenUI.onSurfaceVariant; font.pixelSize: 14 }
+    MouseArea { id: ch; anchors.fill: parent; hoverEnabled: true; onClicked: win.visible = false } }
+  Rectangle { anchors.fill: parent; anchors.margins: 1; radius: OpenUI.shapeLg
+    color: Qt.rgba(OpenUI.neutral10.r,OpenUI.neutral10.g,OpenUI.neutral10.b,0.95); border.color: OpenUI.outlineVariant; border.width: 1; clip: true
+    Rectangle { anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 28; color: "transparent"
+      Text { anchors.left: parent.left; anchors.leftMargin: OpenUI.sp3; anchors.verticalCenter: parent.verticalCenter; text: "图片查看器"; color: OpenUI.onSurface; font.pixelSize: OpenUI.typeLabelL }
+      MouseArea { anchors.fill: parent; onPressed: { dragX = mouse.x; dragY = mouse.y; dragging = true }; onMouseXChanged: { if (dragging) { win.x += mouse.x - dragX; win.y += mouse.y - dragY } }; onReleased: dragging = false } }
+    // 工具栏
+    Row { anchors.top: parent.top; anchors.topMargin: 32; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: OpenUI.sp2; height: 28; spacing: OpenUI.sp2
+      Text { text: images.length + " 张图片"; anchors.verticalCenter: parent.verticalCenter; color: OpenUI.onSurfaceVariant; font.pixelSize: OpenUI.typeLabelM }
+      Item { width: parent.width - 220; height: 1 }
+      Rectangle { width: 24; height: 24; radius: OpenUI.shapeXs; color: gh.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,OpenUI.hoverAlpha) : "transparent"; anchors.verticalCenter: parent.verticalCenter
+        Text { anchors.centerIn: parent; text: "\u25A6"; color: gridMode ? OpenUI.primary : OpenUI.onSurfaceVariant; font.pixelSize: 12 }
+        MouseArea { id: gh; anchors.fill: parent; hoverEnabled: true; onClicked: gridMode = true } }
+      Rectangle { width: 24; height: 24; radius: OpenUI.shapeXs; color: pv.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,OpenUI.hoverAlpha) : "transparent"; anchors.verticalCenter: parent.verticalCenter
+        Text { anchors.centerIn: parent; text: "\u25A3"; color: !gridMode ? OpenUI.primary : OpenUI.onSurfaceVariant; font.pixelSize: 12 }
+        MouseArea { id: pv; anchors.fill: parent; hoverEnabled: true; onClicked: gridMode = false } } }
+    // 缩略图网格
+    GridView { visible: gridMode; anchors.top: parent.top; anchors.topMargin: 64; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: OpenUI.sp3; model: images; cellWidth: 110; cellHeight: 110; interactive: true
+      delegate: Rectangle { width: 90; height: 90; radius: OpenUI.shapeMd; color: Qt.rgba(OpenUI.surfaceBright.r,OpenUI.surfaceBright.g,OpenUI.surfaceBright.b,0.15); border.color: currentIndex === index ? OpenUI.primary : "transparent"; border.width: 2
+        Column { anchors.centerIn: parent; spacing: 2
+          Rectangle { width: 48; height: 48; radius: OpenUI.shapeSm; anchors.horizontalCenter: parent.horizontalCenter; color: modelData.c
+            Text { anchors.centerIn: parent; text: "\u2B21"; color: Qt.rgba(1,1,1,0.4); font.pixelSize: 20 } }
+          Text { text: modelData.n; anchors.horizontalCenter: parent.horizontalCenter; color: OpenUI.onSurface; font.pixelSize: 10; elide: Text.ElideRight; width: 80; horizontalAlignment: Text.AlignHCenter } }
+        MouseArea { anchors.fill: parent; hoverEnabled: true; onClicked: { currentIndex = index; gridMode = false; zoomLevel = 100 } } } }
+    // 单图预览
+    Item { visible: !gridMode; anchors.top: parent.top; anchors.topMargin: 64; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right
+      Rectangle { anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter; width: 28; height: 28; radius: 14; color: pr.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,0.2) : Qt.rgba(0,0,0,0.4); z: 2
+        Text { anchors.centerIn: parent; text: "\u276E"; color: OpenUI.onSurface; font.pixelSize: 14 }
+        MouseArea { id: pr; anchors.fill: parent; hoverEnabled: true; onClicked: { currentIndex = (currentIndex - 1 + images.length) % images.length } } }
+      Rectangle { anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter; width: 28; height: 28; radius: 14; color: nx.hovered ? Qt.rgba(OpenUI.onSurface.r,OpenUI.onSurface.g,OpenUI.onSurface.b,0.2) : Qt.rgba(0,0,0,0.4); z: 2
+        Text { anchors.centerIn: parent; text: "\u276F"; color: OpenUI.onSurface; font.pixelSize: 14 }
+        MouseArea { id: nx; anchors.fill: parent; hoverEnabled: true; onClicked: { currentIndex = (currentIndex + 1) % images.length } } }
+      Rectangle { anchors.centerIn: parent; width: 200; height: 160; radius: OpenUI.shapeSm; color: currentIndex >= 0 ? images[currentIndex].c : OpenUI.surfaceDim
+        Text { anchors.centerIn: parent; text: "\u2B21"; color: Qt.rgba(1,1,1,0.3); font.pixelSize: 60 } } } } }

@@ -1,4 +1,5 @@
 #include "shellbackend.h"
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QProcess>
@@ -23,10 +24,27 @@ void ShellBackend::setWindowActive(int index, bool active) { m_windows->setActiv
 void ShellBackend::addWorkspace(const QString& name) { m_workspaces->add({name, false}); }
 void ShellBackend::setWorkspaceName(int index, const QString& name) { m_workspaces->setName(index, name); }
 void ShellBackend::setWorkspaceActive(int index, bool active) { m_workspaces->setActive(index, active); }
-void ShellBackend::showNotification(const QString& title, const QString& body) {
-    m_notifications->add({title, body});
+void ShellBackend::setDoNotDisturb(bool dnd) {
+    if (m_doNotDisturb != dnd) {
+        m_doNotDisturb = dnd;
+        emit doNotDisturbChanged();
+    }
+}
+
+void ShellBackend::showNotification(const QString& title, const QString& body,
+                                    const QString& appId, const QVariantList& actions) {
+    if (m_doNotDisturb) return;  /* 勿扰模式: 静默丢弃 */
+
+    QVector<NotificationAction> acts;
+    for (const QVariant& a : actions) {
+        QVariantMap m = a.toMap();
+        acts.append({m.value("id").toString(), m.value("label").toString()});
+    }
+    m_notifications->add({title, body, appId,
+                          QDateTime::currentSecsSinceEpoch(), acts});
 }
 void ShellBackend::dismissNotification(int index) { m_notifications->removeAt(index); }
+void ShellBackend::clearAllNotifications() { m_notifications->clear(); }
 
 /* 启动应用: fork/exec, 不阻塞 shell */
 void ShellBackend::launchApp(const QString& command) {

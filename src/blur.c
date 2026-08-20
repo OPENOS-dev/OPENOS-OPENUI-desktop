@@ -1,7 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 /* OPENOS 动态模糊 (NUI2 毛玻璃) 实现
  * 两阶段管线: 渲染清晰场景 -> 读回像素 -> CPU 高斯模糊 -> 二次合成提交。
- * 依赖 wlroots 0.17 公开 API (wlr_scene_output_build_state 等)。
+ * 依赖 wlroots 0.17 公开 API (wlr_scene_output_build_state /
+ * wlr_output_begin_render_pass 等, 均来自 wlr_renderer.h)。
  * best-effort: 失败自动回退普通提交。
  */
 #include <stdint.h>
@@ -9,7 +10,9 @@
 #include <string.h>
 #include <wayland-server-core.h>
 #include <wlr/render/allocator.h>
-#include <wlr/render/wlr_render_pass.h>
+/* wlroots 0.17 的 render pass API (wlr_output_begin_render_pass /
+ * wlr_render_pass_add_texture / wlr_render_pass_submit 等) 全部声明在
+ * wlr_renderer.h 中, 没有独立的 wlr_render_pass.h */
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/wlr_texture.h>
 #include <wlr/types/wlr_buffer.h>

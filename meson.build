@@ -51,9 +51,11 @@ ws_cli     = gen_client.process(ws_xml)
 ws_srv     = gen_server.process(ws_xml)
 ws_code    = gen_code.process(ws_xml)
 
-# 合成器 (窗口管理 + 多工作区 + 动态模糊 + 任务栏/工作区协议 + NUI2 主题)
+# 合成器 (窗口管理 + 多工作区 + 动态模糊 + 任务栏/工作区协议 + NUI2 主题
+#        + 窗口装饰(SSD) + 窗口动画 + 触摸板手势 + 分屏平铺)
 executable('openos-compositor',
   sources: ['src/compositor.c', 'src/blur.c', 'src/workspace.c',
+            'src/decorations.c', 'src/tiling.c', 'src/gestures.c',
             xdg_code, layer_code, layer_srv, ws_code, ws_srv],
   dependencies: [wlroots, wayland_server, xkb, pixman, libinput, math],
   include_directories: [inc, protocol_inc],

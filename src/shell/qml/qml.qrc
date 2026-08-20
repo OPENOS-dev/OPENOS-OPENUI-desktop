@@ -8,6 +8,7 @@
         <file>QuickSettings.qml</file>
         <file>PowerMenu.qml</file>
         <file>LockScreen.qml</file>
+        <file>LoginScreen.qml</file>
         <file>CommandPalette.qml</file>
         <file>CalendarPopup.qml</file>
         <file>AltTabSwitcher.qml</file>
@@ -18,5 +19,24 @@
         <file>VmappManager.qml</file>
         <file>WelcomeScreen.qml</file>
         <file>ThemeCustomizer.qml</file>
+        <file>SystemMonitor.qml</file>
+        <file>Screenshot.qml</file>
+        <file>Clipboard.qml</file>
+        <file>ScreenRecorder.qml</file>
+        <file>FileSearch.qml</file>
+        <file>TilingManager.qml</file>
+        <file>Notes.qml</file>
+        <file>Calculator.qml</file>
+        <file>FileManager.qml</file>
+        <file>Terminal.qml</file>
+        <file>TextEditor.qml</file>
+        <file>DesktopWidgets.qml</file>
+        <file>AppearanceSettings.qml</file>
+        <file>VirtualKeyboard.qml</file>
+        <file>ColorPicker.qml</file>
+        <file>DiskUsage.qml</file>
+        <file>MediaPlayer.qml</file>
+        <file>Clock.qml</file>
+        <file>ImageViewer.qml</file>
     </qresource>
-</RCC>
+
