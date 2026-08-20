@@ -80,3 +80,12 @@ executable('openos-shell',
   include_directories: inc,
   cpp_args: layer_shell_qt.found() ? ['-DOPENOS_USE_LAYERSHELLQT'] : [],
   install: true)
+
+# 内置 freedesktop 图标主题 (NUI 线条风, 90 个 SVG, 8 个 Context)
+# 安装到 /usr/share/icons/OpenOS/, 由 IconLoader 优先查找, hicolor 兜底
+install_subdir('icons/OpenOS',
+  install_dir: get_option('datadir') / 'icons',
+  strip_directory: true)
+
+# 把图标主题注册为系统默认 (通过 XDG_DATA_DIRS 生效)
+meson.add_install_script('meson/install-icon-theme.sh')
