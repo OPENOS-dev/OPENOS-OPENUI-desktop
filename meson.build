@@ -48,7 +48,11 @@ xdg_srv_h = custom_target('xdg-shell-server-protocol.h',
   command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
   build_by_default: true)
 layer_cli  = gen_client.process(layer_xml)
-layer_srv  = gen_server.process(layer_xml)
+layer_srv_h = custom_target('wlr-layer-shell-unstable-v1-server-protocol.h',
+  input: layer_xml,
+  output: 'wlr-layer-shell-unstable-v1-protocol.h',
+  command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
+  build_by_default: true)
 layer_code = gen_code.process(layer_xml)
 ft_cli     = gen_client.process(ft_xml)
 ft_code    = gen_code.process(ft_xml)
@@ -61,7 +65,7 @@ ws_code    = gen_code.process(ws_xml)
 executable('openos-compositor',
   sources: ['src/compositor.c', 'src/blur.c', 'src/workspace.c',
             'src/decorations.c', 'src/tiling.c', 'src/gestures.c',
-            xdg_code, xdg_srv_h, layer_code, layer_srv, ws_code, ws_srv],
+            xdg_code, xdg_srv_h, layer_code, layer_srv_h, ws_code, ws_srv],
   dependencies: [wlroots, wayland_server, xkb, pixman, libinput, math],
   include_directories: [inc, protocol_inc],
   c_args: ['-DWLR_USE_UNSTABLE'],

@@ -13,6 +13,7 @@
 /* wlroots 0.17 的 render pass API (wlr_output_begin_render_pass /
  * wlr_render_pass_add_texture / wlr_render_pass_submit 等) 全部声明在
  * wlr_renderer.h 中, 没有独立的 wlr_render_pass.h */
+#include <wlr/render/pass.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/wlr_texture.h>
 #include <wlr/types/wlr_buffer.h>
@@ -128,8 +129,14 @@ static void render_node(struct wlr_renderer *renderer,
         struct wlr_texture *tex = wlr_texture_from_wlr_buffer(renderer, sb->buffer);
         if (!tex) return;
         struct wlr_box pos = { x, y, sb->buffer->width, sb->buffer->height };
-        wlr_render_pass_add_texture(pass, tex, &pos, NULL,
-                                    WL_OUTPUT_TRANSFORM_NORMAL, 1.0f);
+        const float alpha = 1.0f;
+        struct wlr_render_texture_options tex_opts = {
+            .texture = tex,
+            .dst_box = pos,
+            .alpha = &alpha,
+            .transform = WL_OUTPUT_TRANSFORM_NORMAL,
+        };
+        wlr_render_pass_add_texture(pass, &tex_opts);
         wlr_texture_destroy(tex);
         break;
     }
@@ -169,7 +176,7 @@ bool openos_blur_render(struct wlr_renderer *renderer,
     /* 2. 第一遍: 禁用 blur_tree, 渲染清晰场景到独立 buffer (不提交) */
     wlr_scene_node_set_enabled(&blur_tree->node, false);
     struct wlr_output_state state;
-    wlr_output_state_init(&state, output);
+    wlr_output_state_init(&state);
     bool ok = wlr_scene_output_build_state(scene_output, &state, NULL);
     wlr_scene_node_set_enabled(&blur_tree->node, true);
     if (!ok) {
@@ -187,7 +194,7 @@ bool openos_blur_render(struct wlr_renderer *renderer,
     void *data = NULL;
     uint32_t fmt = 0;
     size_t stride = 0;
-    if (!wlr_buffer_begin_data_ptr_access(buf, &data, &fmt, &stride)) {
+    if (!wlr_buffer_begin_data_ptr_access(buf, WLR_BUFFER_DATA_PTR_ACCESS_READ | WLR_BUFFER_DATA_PTR_ACCESS_WRITE, &data, &fmt, &stride)) {
         wlr_log(WLR_ERROR, "blur: 无法访问 buffer 像素, 回退普通渲染");
         wlr_output_state_finish(&state);
         return false;
@@ -209,22 +216,37 @@ bool openos_blur_render(struct wlr_renderer *renderer,
     }
 
     /* 4. 第二遍: 合成并一次性提交 */
+    struct wlr_output_state render_state;
+    wlr_output_state_init(&render_state);
     struct wlr_render_pass *pass =
-        wlr_output_begin_render_pass(output, allocator, bg_color);
+        wlr_output_begin_render_pass(output, &render_state, NULL);
     if (!pass) {
+        wlr_output_state_finish(&render_state);
         wlr_texture_destroy(scene_tex);
         wlr_texture_destroy(blur_tex);
         return false;
     }
     struct wlr_box full = { 0, 0, output->width, output->height };
-    wlr_render_pass_add_texture(pass, scene_tex, &full, NULL,
-                                WL_OUTPUT_TRANSFORM_NORMAL, 1.0f);
-    wlr_render_pass_add_texture(pass, blur_tex, &box, NULL,
-                                WL_OUTPUT_TRANSFORM_NORMAL, 1.0f);
+    const float alpha = 1.0f;
+    struct wlr_render_texture_options scene_tex_opts = {
+        .texture = scene_tex,
+        .dst_box = full,
+        .alpha = &alpha,
+        .transform = WL_OUTPUT_TRANSFORM_NORMAL,
+    };
+    wlr_render_pass_add_texture(pass, &scene_tex_opts);
+    struct wlr_render_texture_options blur_tex_opts = {
+        .texture = blur_tex,
+        .dst_box = box,
+        .alpha = &alpha,
+        .transform = WL_OUTPUT_TRANSFORM_NORMAL,
+    };
+    wlr_render_pass_add_texture(pass, &blur_tex_opts);
     render_node(renderer, pass, &blur_tree->node);
     wlr_render_pass_submit(pass);
 
-    bool committed = wlr_output_commit(output);
+    bool committed = wlr_output_commit_state(output, &render_state);
+    wlr_output_state_finish(&render_state);
     wlr_texture_destroy(scene_tex);
     wlr_texture_destroy(blur_tex);
     if (!committed)
