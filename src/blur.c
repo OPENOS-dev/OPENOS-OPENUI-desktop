@@ -219,7 +219,7 @@ bool openos_blur_render(struct wlr_renderer *renderer,
     struct wlr_output_state render_state;
     wlr_output_state_init(&render_state);
     struct wlr_render_pass *pass =
-        wlr_output_begin_render_pass(output, &render_state, NULL);
+        wlr_output_begin_render_pass(output, &render_state, NULL, NULL);
     if (!pass) {
         wlr_output_state_finish(&render_state);
         wlr_texture_destroy(scene_tex);

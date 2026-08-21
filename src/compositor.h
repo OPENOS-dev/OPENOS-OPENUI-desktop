@@ -6,7 +6,7 @@
 #include <wayland-server-core.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/types/wlr_foreign_toplevel_management.h>
+#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include "decorations.h"
 #include "workspace.h"
 

@@ -23,7 +23,7 @@
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
-#include <wlr/types/wlr_foreign_toplevel_management.h>
+#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/util/log.h>
 #include "compositor.h"
