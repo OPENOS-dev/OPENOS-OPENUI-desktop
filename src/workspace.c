@@ -69,14 +69,8 @@ static void handle_activate(struct wl_client *client, struct wl_resource *resour
         mgr->on_activate(mgr->data, h->index);
 }
 
-static void handle_destroy(struct wl_client *client, struct wl_resource *resource) {
-    (void)client;
-    wl_resource_destroy(resource);
-}
-
 static const struct openos_workspace_handle_v1_interface handle_impl = {
     .activate = handle_activate,
-    .destroy = handle_destroy,
 };
 
 static void manager_stop(struct wl_client *client, struct wl_resource *resource) {
