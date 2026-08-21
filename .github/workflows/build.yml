@@ -44,6 +44,12 @@ jobs:
             ${{ matrix.arch == 'arm32' && 'crossbuild-essential-armhf' || '' }} \
             ${{ matrix.arch == 'x86' && 'gcc-multilib' || '' }} \
             ${{ matrix.arch == 'loong64' && 'gcc-13-loongarch64-linux-gnu g++-13-loongarch64-linux-gnu' || '' }}
+          # 验证 qt6-svg-dev 是否安装 (meson 依赖 Qt6Svg 模块)
+          dpkg -l qt6-svg-dev &>/dev/null || {
+            echo "::warning::qt6-svg-dev 未安装，尝试单独安装..."
+            sudo apt-get install -y qt6-svg-dev
+          }
+          pkg-config --modversion Qt6Svg 2>/dev/null || echo "::warning::Qt6Svg.pc 未找到，meson 将使用 cmake 查找"
           ccache -M 4G
           echo "/usr/lib/ccache" >> "$GITHUB_PATH"
 
