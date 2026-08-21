@@ -8,8 +8,8 @@
 > **架构原则（2026-08-16 用户确立）**：
 > - **OPENUI 只是 GUI 框架**，不内置具体 app 功能。
 > - 需要交互功能的是**独立 app**（`src/openos-*`），各自可单独 `meson setup` 构建：
->   `openos-settings` / `openos-oak` / `openos-opt` / `openos-vmapp` /
->   `openos-calendar` / `openos-run` / `openos-welcome`。
+>   `openos-settings` / `openos-oak` / `openos-opt` /
+  `openos-calendar` / `openos-run` / `openos-welcome`。
 > - 每个独立 app 自包含 `main.cpp + QML + qml.qrc + meson.build + OpenUI.qml`（令牌副本）。
 
 目标架构：arm32 / arm64 / x86 / x86-64（构建在 OPENOS / Linux 上，macOS 无法编译运行）。
