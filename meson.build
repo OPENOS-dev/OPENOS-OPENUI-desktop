@@ -14,8 +14,10 @@ libinput      = dependency('libinput')
 math          = cc.find_library('m')
 
 # Qt 6 (外壳): Core/Gui/Quick/Qml + WaylandClient(协议绑定) + Svg(图标着色)
+# Svg 单独用 dependency('Qt6Svg') 查找, 避免 meson qt6 模块内部查找失败
 qt6      = import('qt6')
-qt6_dep  = dependency('qt6', modules: ['Core', 'Gui', 'Quick', 'Qml', 'WaylandClient', 'Svg'])
+qt6_dep  = dependency('qt6', modules: ['Core', 'Gui', 'Quick', 'Qml', 'WaylandClient'])
+qt6svg_dep = dependency('Qt6Svg', required: true)
 
 inc = include_directories('src')
 
@@ -88,7 +90,7 @@ executable('openos-shell',
             'src/shell/iconloader.cpp', 'src/shell/iconprovider.cpp',
             qt6_shell,
             ft_cli, ft_code, ws_cli, ws_code],
-  dependencies: [qt6_dep, wayland_client, math, layer_shell_qt],
+  dependencies: [qt6_dep, qt6svg_dep, wayland_client, math, layer_shell_qt],
   include_directories: inc,
   cpp_args: layer_shell_qt.found() ? ['-DOPENOS_USE_LAYERSHELLQT'] : [],
   install: true)
