@@ -6,15 +6,11 @@
 
 /* 获取可用输出盒 */
 static struct wlr_box get_usable_box(struct openos_server *server) {
-    struct wlr_box *output_box =
-        wlr_output_layout_get_box(server->output_layout, NULL);
     struct wlr_box box = {0};
-    if (output_box) {
-        box = *output_box;
-        /* 减去面板高度 (顶部任务栏) */
-        box.y += 32;
-        box.height -= 32;
-    }
+    wlr_output_layout_get_box(server->output_layout, NULL, &box);
+    /* 减去面板高度 (顶部任务栏) */
+    box.y += 32;
+    box.height -= 32;
     return box;
 }
 

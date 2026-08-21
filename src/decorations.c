@@ -36,7 +36,7 @@ void deco_create(struct openos_deco *deco, struct wlr_scene_tree *parent,
     /* ---- 1. 悬浮标题栏 (左) ---- */
     float title_bg[4];
     colorf(OUI_SURFACE, title_bg, 0.85f);
-    deco->title_bar = wlr_scene_rect_create(&deco->tree->node,
+    deco->title_bar = wlr_scene_rect_create(deco->tree,
                                              DECO_TITLE_BAR_W, DECO_TITLEBAR_H,
                                              title_bg);
     wlr_scene_node_set_position(&deco->title_bar->node,
@@ -45,7 +45,7 @@ void deco_create(struct openos_deco *deco, struct wlr_scene_tree *parent,
     /* ---- 2. 悬浮控制块 (右) ---- */
     float ctrl_bg[4];
     colorf(OUI_SURFACE, ctrl_bg, 0.85f);
-    deco->controls_bg = wlr_scene_rect_create(&deco->tree->node,
+    deco->controls_bg = wlr_scene_rect_create(deco->tree,
                                                DECO_CONTROLS_W, DECO_TITLEBAR_H,
                                                ctrl_bg);
 
@@ -67,14 +67,14 @@ void deco_create(struct openos_deco *deco, struct wlr_scene_tree *parent,
     /* 关闭按钮 (最右) */
     float close_color[4];
     colorf(OUI_ERROR, close_color, 0.15f);
-    deco->close_btn = wlr_scene_rect_create(&deco->tree->node,
+    deco->close_btn = wlr_scene_rect_create(deco->tree,
                                             DECO_BUTTON_W, DECO_BUTTON_H,
                                             close_color);
     wlr_scene_node_set_position(&deco->close_btn->node,
                                cx + btn_right - DECO_BUTTON_W, btn_center_y);
 
     /* 最大化按钮 (中间) */
-    deco->max_btn = wlr_scene_rect_create(&deco->tree->node,
+    deco->max_btn = wlr_scene_rect_create(deco->tree,
                                           DECO_BUTTON_W, DECO_BUTTON_H,
                                           btn_default);
     wlr_scene_node_set_position(&deco->max_btn->node,
@@ -82,7 +82,7 @@ void deco_create(struct openos_deco *deco, struct wlr_scene_tree *parent,
                                btn_center_y);
 
     /* 最小化按钮 (左) */
-    deco->min_btn = wlr_scene_rect_create(&deco->tree->node,
+    deco->min_btn = wlr_scene_rect_create(deco->tree,
                                           DECO_BUTTON_W, DECO_BUTTON_H,
                                           btn_default);
     wlr_scene_node_set_position(&deco->min_btn->node,

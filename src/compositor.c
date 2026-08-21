@@ -26,6 +26,7 @@
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/util/log.h>
+#include <xkbcommon/xkbcommon.h>
 #include "compositor.h"
 #include "nui2.h"
 #include "blur.h"
@@ -146,7 +147,7 @@ static void begin_move(struct openos_view *view, struct wlr_surface *surf,
     s->grab_x = s->cursor->x;
     s->grab_y = s->cursor->y;
     struct wlr_box geo;
-    wlr_xdg_toplevel_get_geometry(view->xdg_toplevel, &geo);
+    wlr_xdg_surface_get_geometry(view->xdg_toplevel->base, &geo);
     s->grab_geobox_x = geo.x;
     s->grab_geobox_y = geo.y;
     (void)serial;
@@ -160,7 +161,7 @@ static void begin_resize(struct openos_view *view, struct wlr_surface *surf,
     s->grab_x = s->cursor->x;
     s->grab_y = s->cursor->y;
     struct wlr_box geo;
-    wlr_xdg_toplevel_get_geometry(view->xdg_toplevel, &geo);
+    wlr_xdg_surface_get_geometry(view->xdg_toplevel->base, &geo);
     s->grab_geobox_x = geo.x;
     s->grab_geobox_y = geo.y;
     (void)serial;
@@ -183,12 +184,13 @@ static void on_view_map(struct wl_listener *l, void *data) {
             wlr_foreign_toplevel_handle_v1_set_app_id(v->ft_handle, t->app_id);
     }
     struct wlr_box geo;
-    wlr_xdg_toplevel_get_geometry(t, &geo);
+    wlr_xdg_surface_get_geometry(t->base, &geo);
     if (geo.x == 0 && geo.y == 0) {
-        struct wlr_box *o = wlr_output_layout_get_box(v->server->output_layout, NULL);
+        struct wlr_box o;
+        wlr_output_layout_get_box(v->server->output_layout, NULL, &o);
         wlr_scene_node_set_position(&v->scene_tree->node,
-            (o->width - geo.width) / 2,
-            (o->height - geo.height) / 2 + 24);
+            (o.width - geo.width) / 2,
+            (o.height - geo.height) / 2 + 24);
     }
     focus_view(v, t->base->surface);
 }
@@ -217,13 +219,16 @@ static void on_view_destroy(struct wl_listener *l, void *data) {
 static void on_request_move(struct wl_listener *l, void *data) {
     struct wlr_xdg_toplevel_move_event *e = data;
     struct openos_view *v = wl_container_of(l, v, request_move);
-    begin_move(v, e->surface, e->serial);
+    /* 获取 surface: 从 xdg_toplevel 的 base surface 获取 */
+    struct wlr_surface *surf = v->xdg_toplevel->base->surface;
+    begin_move(v, surf, e->serial);
 }
 
 static void on_request_resize(struct wl_listener *l, void *data) {
     struct wlr_xdg_toplevel_resize_event *e = data;
     struct openos_view *v = wl_container_of(l, v, request_resize);
-    begin_resize(v, e->surface, e->edges, e->serial);
+    struct wlr_surface *surf = v->xdg_toplevel->base->surface;
+    begin_resize(v, surf, e->edges, e->serial);
 }
 
 static void on_request_maximize(struct wl_listener *l, void *data) {
@@ -254,27 +259,26 @@ static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
     v->anim_opacity = 1.0;
     v->anim_scale = 1.0;
 
-    const int BORDER = 1;
     v->workspace = s->current_workspace;
     v->scene_tree = wlr_scene_tree_create(s->workspaces[v->workspace]);
     float bcol[4]; nui_colorf(NUI_SURFACE_4, bcol);
-    v->border = wlr_scene_rect_create(&v->scene_tree->node, 100, 100, bcol);
+    v->border = wlr_scene_rect_create(v->scene_tree, 100, 100, bcol);
 
     /* 创建窗口装饰 (标题栏 + 按钮) */
     deco_create(&v->deco, v->scene_tree, 100);
 
     /* 场景表面在装饰下方 (标题栏之下) */
-    v->scene_surface = wlr_scene_surface_create(&v->scene_tree->node,
+    v->scene_surface = wlr_scene_surface_create(v->scene_tree,
                                                 toplevel->base->surface);
-    wlr_scene_node_set_position(&v->scene_surface->node,
-                                DECO_BORDER_W, deco_titlebar_height());
+    wlr_scene_node_set_position(&v->scene_surface->buffer->node,
+                                DECO_FLOATING_MARGIN, deco_titlebar_height());
 
     v->map.notify = on_view_map;
     wl_signal_add(&toplevel->base->events.map, &v->map);
     v->unmap.notify = on_view_unmap;
     wl_signal_add(&toplevel->base->events.unmap, &v->unmap);
     v->destroy.notify = on_view_destroy;
-    wl_signal_add(&toplevel->events.destroy, &v->destroy);
+    wl_signal_add(&toplevel->base->events.destroy, &v->destroy);
     v->request_move.notify = on_request_move;
     wl_signal_add(&toplevel->events.request_move, &v->request_move);
     v->request_resize.notify = on_request_resize;
@@ -304,7 +308,7 @@ static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
 static void ft_request_activate_handler(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, ft_request_activate);
     struct wlr_foreign_toplevel_handle_v1_activated_event *ev = data;
-    struct openos_view *v = ev->handle->data;
+    struct openos_view *v = ev->toplevel_handle->data;
     if (!v) return;
     if (v->workspace != s->current_workspace)
         switch_workspace(s, v->workspace);
@@ -314,14 +318,14 @@ static void ft_request_activate_handler(struct wl_listener *l, void *data) {
 static void ft_request_close_handler(struct wl_listener *l, void *data) {
     (void)l;
     struct wlr_foreign_toplevel_handle_v1_close_event *ev = data;
-    struct openos_view *v = ev->handle->data;
+    struct openos_view *v = ev->toplevel_handle->data;
     if (v) wlr_xdg_toplevel_send_close(v->xdg_toplevel);
 }
 
 static void ft_request_maximize_handler(struct wl_listener *l, void *data) {
     (void)l;
     struct wlr_foreign_toplevel_handle_v1_maximized_event *ev = data;
-    struct openos_view *v = ev->handle->data;
+    struct openos_view *v = ev->toplevel_handle->data;
     if (v) wlr_xdg_toplevel_set_maximized(v->xdg_toplevel, ev->maximized);
 }
 
@@ -349,8 +353,10 @@ static void on_layer_unmap(struct wl_listener *l, void *data) {
 }
 static void on_layer_configure(struct wl_listener *l, void *data) {
     struct openos_layer *lay = wl_container_of(l, lay, configure);
-    struct wlr_layer_surface_v1_configure_event *ev = data;
-    wlr_layer_surface_v1_configure(lay->layer_surface, ev->width, ev->height);
+    struct wlr_layer_surface_v1 *ls = lay->layer_surface;
+    /* 从 layer_surface 的 pending 状态获取配置尺寸 */
+    wlr_layer_surface_v1_configure(ls, ls->pending.width, ls->pending.height);
+    (void)data;
 }
 
 static void on_new_layer_surface(struct wl_listener *l, void *data) {
@@ -420,7 +426,7 @@ static void on_new_output(struct wl_listener *l, void *data) {
     assert(o);
     o->server = s;
     o->wlr_output = wlr_output;
-    o->scene_output = wlr_scene_output_layout_add_output(s->scene_layout, wlr_output);
+    o->scene_output = wlr_scene_output_layout_add_output(s->scene_layout, wlr_output, o->scene_output);
     o->frame.notify = on_output_frame;
     wl_signal_add(&wlr_output->events.frame, &o->frame);
     wl_list_insert(&s->outputs, &o->link);
@@ -451,7 +457,7 @@ static void on_keyboard_key(struct wl_listener *l, void *data) {
                 struct wlr_surface *f = seat->keyboard_state.focused_surface;
                 if (f) {
                     struct wlr_xdg_surface *xdg =
-                        wlr_xdg_surface_from_wlr_surface(f);
+                        wlr_xdg_surface_try_from_wlr_surface(f);
                     if (xdg && xdg->toplevel)
                         wlr_xdg_toplevel_send_close(xdg->toplevel);
                 }
@@ -471,7 +477,7 @@ static void on_keyboard_key(struct wl_listener *l, void *data) {
                 struct wlr_surface *f = seat->keyboard_state.focused_surface;
                 if (f) {
                     struct wlr_xdg_surface *xdg =
-                        wlr_xdg_surface_from_wlr_surface(f);
+                        wlr_xdg_surface_try_from_wlr_surface(f);
                     if (xdg && xdg->toplevel)
                         wlr_xdg_toplevel_send_close(xdg->toplevel);
                 }
@@ -481,7 +487,7 @@ static void on_keyboard_key(struct wl_listener *l, void *data) {
                 struct wlr_surface *f = seat->keyboard_state.focused_surface;
                 if (f) {
                     struct wlr_xdg_surface *xdg =
-                        wlr_xdg_surface_from_wlr_surface(f);
+                        wlr_xdg_surface_try_from_wlr_surface(f);
                     if (xdg && xdg->toplevel) {
                         wlr_xdg_toplevel_set_maximized(xdg->toplevel,
                             !xdg->toplevel->requested.maximized);
@@ -516,7 +522,9 @@ static void on_new_input(struct wl_listener *l, void *data) {
     switch (dev->type) {
     case WLR_INPUT_DEVICE_KEYBOARD: {
         struct wlr_keyboard *kb = wlr_keyboard_from_input_device(dev);
-        wlr_keyboard_set_keymap(kb, wlr_xkb_keymap_from_names(NULL, NULL));
+        struct xkb_keymap *xkb_keymap = xkb_keymap_new_from_names(NULL, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        wlr_keyboard_set_keymap(kb, xkb_keymap);
+        xkb_keymap_unref(xkb_keymap);
         wlr_keyboard_set_repeat_info(kb, 25, 600);
         s->keyboard_key.notify = on_keyboard_key;
         wl_signal_add(&kb->events.key, &s->keyboard_key);
@@ -531,22 +539,15 @@ static void on_new_input(struct wl_listener *l, void *data) {
         struct wlr_pointer *ptr = wlr_pointer_from_input_device(dev);
         wlr_cursor_attach_input_device(s->cursor, dev);
         /* 注册触摸板手势事件 */
-        s->gesture_swipe_begin.notify = handle_gesture_swipe_begin;
-        wl_signal_add(&ptr->events.gesture_swipe_begin,
-                      &s->gesture_swipe_begin);
-        s->gesture_swipe_update.notify = handle_gesture_swipe_update;
-        wl_signal_add(&ptr->events.gesture_swipe_update,
-                      &s->gesture_swipe_update);
-        s->gesture_swipe_end.notify = handle_gesture_swipe_end;
-        wl_signal_add(&ptr->events.gesture_swipe_end,
-                      &s->gesture_swipe_end);
+        /* 手势事件通过 wlr_pointer_gestures_v1 协议处理, 不在 wlr_pointer.events 上 */
+        (void)ptr;
         break;
     }
     default:
         break;
     }
     uint32_t caps = WL_SEAT_CAPABILITY_POINTER;
-    if (!wl_list_empty(&s->seat->keyboards))
+    if (wlr_seat_get_keyboard(s->seat))
         caps |= WL_SEAT_CAPABILITY_KEYBOARD;
     wlr_seat_set_capabilities(s->seat, caps);
 }
@@ -555,7 +556,7 @@ static void on_new_input(struct wl_listener *l, void *data) {
 static void on_cursor_motion(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, cursor_motion);
     struct wlr_pointer_motion_event *e = data;
-    wlr_cursor_move(s->cursor, &e->pointer->base, e->dx, e->dy);
+    wlr_cursor_move(s->cursor, &e->pointer->base, e->delta_x, e->delta_y);
     on_cursor_update(s);
 }
 
@@ -582,9 +583,9 @@ static void on_cursor_button(struct wl_listener *l, void *data) {
                     /* 命中测试装饰 */
                     double sx = s->cursor->x;
                     double sy = s->cursor->y;
-                    double node_x = 0, node_y = 0;
-                    if (wlr_scene_node_coords(&v->scene_tree->node,
-                                              &node_x, &node_y)) {
+                    float node_x = 0, node_y = 0;
+                    wlr_scene_node_coords(&v->scene_tree->node,
+                                          &node_x, &node_y);
                         int hit = deco_hit_test(&v->deco,
                             sx - node_x, sy - node_y);
                         if (hit == 1) {
@@ -621,7 +622,7 @@ static void on_cursor_axis(struct wl_listener *l, void *data) {
     struct openos_server *s = wl_container_of(l, s, cursor_axis);
     struct wlr_pointer_axis_event *e = data;
     wlr_seat_pointer_notify_axis(s->seat, e->time_msec, e->orientation,
-        e->delta, e->delta_discrete, e->source, e->relative_direction);
+        e->delta, e->delta_discrete, e->source);
 }
 
 static void on_cursor_frame(struct wl_listener *l, void *data) {
@@ -664,9 +665,9 @@ void on_cursor_update(struct openos_server *s) {
         struct openos_view *v;
         wl_list_for_each(v, &s->views, link) {
             if (v->scene_surface &&
-                &v->scene_surface->node == node) {
-                double nx = 0, ny = 0;
-                if (wlr_scene_node_coords(&v->scene_tree->node, &nx, &ny)) {
+                &v->scene_surface->buffer->node == node) {
+                float nx = 0, ny = 0;
+                wlr_scene_node_coords(&v->scene_tree->node, &nx, &ny);
                     deco_set_hover(&v->deco,
                         s->cursor->x - nx, s->cursor->y - ny);
                 }

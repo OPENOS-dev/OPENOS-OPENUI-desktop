@@ -126,7 +126,7 @@ static void render_node(struct wlr_renderer *renderer,
     case WLR_SCENE_NODE_BUFFER: {
         struct wlr_scene_buffer *sb = wlr_scene_buffer_from_node(n);
         if (!sb->buffer) return;
-        struct wlr_texture *tex = wlr_texture_from_wlr_buffer(renderer, sb->buffer);
+        struct wlr_texture *tex = wlr_texture_from_buffer(renderer, sb->buffer);
         if (!tex) return;
         struct wlr_box pos = { x, y, sb->buffer->width, sb->buffer->height };
         const float alpha = 1.0f;
@@ -160,6 +160,8 @@ bool openos_blur_render(struct wlr_renderer *renderer,
                         struct wlr_scene_tree *blur_tree,
                         const float bg_color[4]) {
     (void)scene;
+    (void)allocator;
+    (void)bg_color;
 
     /* 1. 计算模糊盒, 裁剪到输出范围 */
     struct wlr_box box = {0};
@@ -199,7 +201,7 @@ bool openos_blur_render(struct wlr_renderer *renderer,
         wlr_output_state_finish(&state);
         return false;
     }
-    struct wlr_texture *scene_tex = wlr_texture_from_wlr_buffer(renderer, buf);
+    struct wlr_texture *scene_tex = wlr_texture_from_buffer(renderer, buf);
     blur_region(data, stride, &box);
     struct wlr_texture *blur_tex = wlr_texture_from_pixels(
         renderer, fmt, (uint32_t)stride, (uint32_t)box.width,
