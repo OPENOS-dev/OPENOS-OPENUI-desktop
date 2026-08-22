@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2026 OPENOS-dev
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the OPENOS-PROJECT-LICENSE (OPL) v1.2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OPL for more details.
+ *
+ * You should have received a copy of the OPL along with this program.
+ * If not, see <https://github.com/OPENOS-dev/OPL>.
+ */
+
 import QtQuick 2.15; import QtQuick.Window 2.15
 Window { id: win; visible: false; width: 320; height: 360; minimumWidth: 280; minimumHeight: 300; flags: Qt.FramelessWindowHint; title: "时钟"; color: "transparent"
   property int tab: 0; property int dragX: 0; property int dragY: 0; property bool dragging: false

@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2026 OPENOS-dev
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the OPENOS-PROJECT-LICENSE (OPL) v1.2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OPL for more details.
+ *
+ * You should have received a copy of the OPL along with this program.
+ * If not, see <https://github.com/OPENOS-dev/OPL>.
+ */
+
 import QtQuick 2.15
 
 /* OAK 状态指示器组件 (离屏渲染到合成器, 由 oak_bridge 驱动)

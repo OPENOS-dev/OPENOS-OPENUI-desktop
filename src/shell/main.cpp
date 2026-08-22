@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2026 OPENOS-dev
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the OPENOS-PROJECT-LICENSE (OPL) v1.2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OPL for more details.
+ *
+ * You should have received a copy of the OPL along with this program.
+ * If not, see <https://github.com/OPENOS-dev/OPL>.
+ */
+
 /* OPENOS 桌面外壳 — Qt Quick 客户端入口
  * 架构: wlroots 合成器(openos-compositor) + Qt Quick 外壳(openos-shell)
  *   - 外壳以 layer-shell 方式显示面板/通知 (LayerShellQt 路线, 见 waylandbridge)
@@ -5,6 +19,7 @@
  * 依赖: Qt 6 (Core/Gui/Quick/Qml) + qtwayland, 在 OPENOS/Linux 上运行。
  */
 #include <QCoreApplication>
+
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>

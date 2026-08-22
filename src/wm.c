@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2026 OPENOS-dev
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the OPENOS-PROJECT-LICENSE (OPL) v1.2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OPL for more details.
+ *
+ * You should have received a copy of the OPL along with this program.
+ * If not, see <https://github.com/OPENOS-dev/OPL>.
+ */
+
 /* OPENOS 桌面环境 — 窗口管理器 (基础重父化 WM)
  * 功能: 接管客户端窗口、加悬浮标题栏、拖拽移动、关闭按钮。
  * 悬浮设计: 标题栏(左) + 控制按钮(右) 两个独立块

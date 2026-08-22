@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2026 OPENOS-dev
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the OPENOS-PROJECT-LICENSE (OPL) v1.2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OPL for more details.
+ *
+ * You should have received a copy of the OPL along with this program.
+ * If not, see <https://github.com/OPENOS-dev/OPL>.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 /* OPENOS 面板 — 任务栏 + 工作区切换器 + 启动器 (Wayland 客户端)
  * - 任务栏: 经 wlr-foreign-toplevel-management 协议列出全部窗口,

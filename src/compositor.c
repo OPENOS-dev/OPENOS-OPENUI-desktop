@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2026 OPENOS-dev
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the OPENOS-PROJECT-LICENSE (OPL) v1.2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OPL for more details.
+ *
+ * You should have received a copy of the OPL along with this program.
+ * If not, see <https://github.com/OPENOS-dev/OPL>.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 /* OPENOS 桌面环境 — Wayland 合成器 (wlroots)
  * 提供: 窗口管理(xdg-shell) + 桌面层(layer-shell) + NUI2 主题
@@ -27,6 +41,7 @@
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
+
 #include "compositor.h"
 #include "nui2.h"
 #include "blur.h"

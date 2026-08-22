@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2026 OPENOS-dev
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the OPENOS-PROJECT-LICENSE (OPL) v1.2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OPL for more details.
+ *
+ * You should have received a copy of the OPL along with this program.
+ * If not, see <https://github.com/OPENOS-dev/OPL>.
+ */
+
 /* OPENOS 桌面外壳 — Wayland 协议桥实现
  *
  * 数据协议 (任务栏/工作区) 用原生 libwayland-client:
@@ -8,6 +22,7 @@
  * 事件循环: QSocketNotifier 监听 wl_display fd, 接入 Qt 事件循环。
  * 注意: 需在 OPENOS/Linux 上编译 (依赖 wayland-client + 生成协议头)。
  */
+
 #include "waylandbridge.h"
 #include "shellbackend.h"
 
