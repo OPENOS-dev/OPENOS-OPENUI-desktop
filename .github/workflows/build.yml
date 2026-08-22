@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86-64]
+        arch: [x86-64, x86, arm64, arm32, loong64]
 
     env:
       COMPONENT: OPENUI-desktop
@@ -43,7 +43,7 @@ jobs:
             ${{ matrix.arch == 'arm64' && 'crossbuild-essential-arm64' || '' }} \
             ${{ matrix.arch == 'arm32' && 'crossbuild-essential-armhf' || '' }} \
             ${{ matrix.arch == 'x86' && 'gcc-multilib' || '' }} \
-            ${{ matrix.arch == 'loong64' && 'gcc-13-loongarch64-linux-gnu g++-13-loongarch64-linux-gnu' || '' }}
+            ${{ matrix.arch == 'loong64' && 'gcc-14-loongarch64-linux-gnu g++-14-loongarch64-linux-gnu' || '' }}
           # 验证 qt6-svg-dev 是否安装 (meson 依赖 Qt6Svg 模块)
           dpkg -l qt6-svg-dev &>/dev/null || {
             echo "::warning::qt6-svg-dev 未安装，尝试单独安装..."
