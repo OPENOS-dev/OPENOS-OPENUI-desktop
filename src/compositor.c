@@ -73,12 +73,7 @@ static void view_animate_in(struct openos_view *view) {
     view->animating_out = false;
 }
 
-static void view_animate_out(struct openos_view *view) {
-    view->anim_opacity = 1.0;
-    view->anim_scale = 1.0;
-    view->animating_in = false;
-    view->animating_out = true;
-}
+/* view_animate_out 暂未使用, 保留以备后续动画扩展 */
 
 static void update_animations(struct openos_server *server) {
     struct openos_view *view;
@@ -262,10 +257,17 @@ static void on_request_fullscreen(struct wl_listener *l, void *data) {
         v->xdg_toplevel->requested.fullscreen);
 }
 
-/* ---- xdg-shell: 新顶层窗口 ---- */
-static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
-    struct openos_server *s = wl_container_of(l, s, new_xdg_toplevel);
-    struct wlr_xdg_toplevel *toplevel = data;
+/* ---- foreign-toplevel 请求 (wlroots 0.17: 事件在 handle 上, 不在 manager 上) ---- */
+static void ft_request_activate_handler(struct wl_listener *l, void *data);
+static void ft_request_close_handler(struct wl_listener *l, void *data);
+static void ft_request_maximize_handler(struct wl_listener *l, void *data);
+
+/* ---- xdg-shell: 新顶层窗口 (wlroots 0.17: 事件 new_surface, 数据为 wlr_xdg_surface *) ---- */
+static void on_new_xdg_surface(struct wl_listener *l, void *data) {
+    struct openos_server *s = wl_container_of(l, s, new_xdg_surface);
+    struct wlr_xdg_surface *surface = data;
+    if (surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL) return;
+    struct wlr_xdg_toplevel *toplevel = surface->toplevel;
 
     struct openos_view *v = calloc(1, sizeof *v);
     assert(v);
@@ -316,31 +318,40 @@ static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
         }
     }
 
+    /* 绑定 foreign-toplevel handle 事件 (wlroots 0.17: 事件在 handle 上) */
+    if (v->ft_handle) {
+        v->ft_request_activate.notify = ft_request_activate_handler;
+        wl_signal_add(&v->ft_handle->events.request_activate,
+            &v->ft_request_activate);
+        v->ft_request_close.notify = ft_request_close_handler;
+        wl_signal_add(&v->ft_handle->events.request_close,
+            &v->ft_request_close);
+        v->ft_request_maximize.notify = ft_request_maximize_handler;
+        wl_signal_add(&v->ft_handle->events.request_maximize,
+            &v->ft_request_maximize);
+    }
+
     wl_list_insert(&s->views, &v->link);
 }
 
-/* ---- foreign-toplevel 请求 ---- */
+/* ---- foreign-toplevel 请求 (wlroots 0.17: 事件在 handle 上, 不在 manager 上) ---- */
 static void ft_request_activate_handler(struct wl_listener *l, void *data) {
-    struct openos_server *s = wl_container_of(l, s, ft_request_activate);
+    struct openos_view *v = wl_container_of(l, v, ft_request_activate);
     struct wlr_foreign_toplevel_handle_v1_activated_event *ev = data;
-    struct openos_view *v = ev->toplevel_handle->data;
     if (!v) return;
-    if (v->workspace != s->current_workspace)
-        switch_workspace(s, v->workspace);
+    if (v->workspace != v->server->current_workspace)
+        switch_workspace(v->server, v->workspace);
     focus_view(v, v->xdg_toplevel->base->surface);
 }
 
 static void ft_request_close_handler(struct wl_listener *l, void *data) {
-    (void)l;
-    struct wlr_foreign_toplevel_handle_v1_close_event *ev = data;
-    struct openos_view *v = ev->toplevel_handle->data;
+    struct openos_view *v = wl_container_of(l, v, ft_request_close);
     if (v) wlr_xdg_toplevel_send_close(v->xdg_toplevel);
 }
 
 static void ft_request_maximize_handler(struct wl_listener *l, void *data) {
-    (void)l;
+    struct openos_view *v = wl_container_of(l, v, ft_request_maximize);
     struct wlr_foreign_toplevel_handle_v1_maximized_event *ev = data;
-    struct openos_view *v = ev->toplevel_handle->data;
     if (v) wlr_xdg_toplevel_set_maximized(v->xdg_toplevel, ev->maximized);
 }
 
@@ -730,22 +741,14 @@ int main(int argc, char *argv[]) {
     float bg[4]; nui_colorf(NUI_SURFACE_0, bg);
     wlr_scene_set_background_color(server.scene, bg);
 
-    wlr_compositor_create(server.display, WLR_COMPOSITOR_VERSION, server.renderer);
+    wlr_compositor_create(server.display, 4, server.renderer);
     wlr_data_device_manager_create(server.display);
-    server.xdg_shell = wlr_xdg_shell_create(server.display);
-    server.layer_shell = wlr_layer_shell_v1_create(server.display);
+    server.xdg_shell = wlr_xdg_shell_create(server.display, 4);
+    server.layer_shell = wlr_layer_shell_v1_create(server.display, 2);
     server.foreign_toplevel = wlr_foreign_toplevel_manager_v1_create(server.display);
     server.workspace_mgr = openos_workspace_manager_create(server.display,
         WORKSPACE_COUNT, 0, on_workspace_activate, &server);
-    server.ft_request_activate.notify = ft_request_activate_handler;
-    wl_signal_add(&server.foreign_toplevel->events.request_activate,
-        &server.ft_request_activate);
-    server.ft_request_close.notify = ft_request_close_handler;
-    wl_signal_add(&server.foreign_toplevel->events.request_close,
-        &server.ft_request_close);
-    server.ft_request_maximize.notify = ft_request_maximize_handler;
-    wl_signal_add(&server.foreign_toplevel->events.request_maximize,
-        &server.ft_request_maximize);
+    /* 注意: foreign-toplevel 请求事件在 handle 上绑定, 不在 server 上 (wlroots 0.17) */
 
     server.cursor = wlr_cursor_create();
     wlr_cursor_attach_output_layout(server.cursor, server.output_layout);
@@ -757,8 +760,8 @@ int main(int argc, char *argv[]) {
     wl_signal_add(&server.backend->events.new_output, &server.new_output);
     server.new_input.notify = on_new_input;
     wl_signal_add(&server.backend->events.new_input, &server.new_input);
-    server.new_xdg_toplevel.notify = on_new_xdg_toplevel;
-    wl_signal_add(&server.xdg_shell->events.new_toplevel, &server.new_xdg_toplevel);
+    server.new_xdg_surface.notify = on_new_xdg_surface;
+    wl_signal_add(&server.xdg_shell->events.new_surface, &server.new_xdg_surface);
     server.new_layer_surface.notify = on_new_layer_surface;
     wl_signal_add(&server.layer_shell->events.new_surface, &server.new_layer_surface);
 

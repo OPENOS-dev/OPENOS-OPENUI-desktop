@@ -103,9 +103,7 @@ struct openos_server {
 
     struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel;
     struct openos_workspace_manager *workspace_mgr;
-    struct wl_listener ft_request_activate;
-    struct wl_listener ft_request_close;
-    struct wl_listener ft_request_maximize;
+    /* 注意: foreign-toplevel 请求监听器在 view 上, 不在 server 上 (wlroots 0.17) */
 
     struct wlr_surface *grabbed_surface;
     double grab_x, grab_y;
@@ -114,7 +112,7 @@ struct openos_server {
 
     struct wl_listener new_output;
     struct wl_listener new_input;
-    struct wl_listener new_xdg_toplevel;
+    struct wl_listener new_xdg_surface;
     struct wl_listener new_layer_surface;
     struct wl_listener cursor_motion;
     struct wl_listener cursor_motion_abs;
