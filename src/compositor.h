@@ -42,7 +42,7 @@ struct openos_view {
     struct wlr_xdg_toplevel *xdg_toplevel;
     struct wlr_scene_tree *scene_tree;
     struct wlr_scene_rect *border;
-    struct wlr_scene_surface *scene_surface;
+    struct wlr_scene_buffer *scene_surface;
     bool mapped;
     int workspace;
 
@@ -64,6 +64,11 @@ struct openos_view {
     struct wl_listener request_resize;
     struct wl_listener request_maximize;
     struct wl_listener request_fullscreen;
+
+    /* foreign-toplevel 请求 (wlroots 0.17: 事件在 handle 上, 不在 manager 上) */
+    struct wl_listener ft_request_activate;
+    struct wl_listener ft_request_close;
+    struct wl_listener ft_request_maximize;
 };
 
 struct openos_layer {

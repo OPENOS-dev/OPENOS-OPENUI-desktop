@@ -285,7 +285,7 @@ static void on_new_xdg_toplevel(struct wl_listener *l, void *data) {
     /* 场景表面在装饰下方 (标题栏之下) */
     v->scene_surface = wlr_scene_surface_create(v->scene_tree,
                                                 toplevel->base->surface);
-    wlr_scene_node_set_position(&v->scene_surface->buffer->node,
+    wlr_scene_node_set_position(&v->scene_surface->node,
                                 DECO_FLOATING_MARGIN, deco_titlebar_height());
 
     v->map.notify = on_view_map;
@@ -673,14 +673,15 @@ void on_cursor_update(struct openos_server *s) {
     struct wlr_scene_node *node = wlr_scene_node_at(&s->scene->tree,
         s->cursor->x, s->cursor->y, NULL, NULL);
     if (node && node->type == WLR_SCENE_NODE_SURFACE) {
-        struct wlr_surface *surf = wlr_scene_surface_from_node(node)->surface;
+        struct wlr_scene_buffer *sb = wlr_scene_buffer_from_node(node);
+        struct wlr_surface *surf = wlr_scene_surface_from_buffer(sb);
         wlr_seat_pointer_notify_enter(s->seat, surf, s->cursor->x, s->cursor->y);
 
         /* 更新装饰 hover */
         struct openos_view *v;
         wl_list_for_each(v, &s->views, link) {
             if (v->scene_surface &&
-                &v->scene_surface->buffer->node == node) {
+                &v->scene_surface->node == node) {
                 float nx = 0, ny = 0;
                 wlr_scene_node_coords(&v->scene_tree->node, &nx, &ny);
                     deco_set_hover(&v->deco,
@@ -716,7 +717,7 @@ int main(int argc, char *argv[]) {
     wlr_renderer_init_wl_display(server.renderer, server.display);
 
     server.scene = wlr_scene_create();
-    server.scene_layout = wlr_scene_output_layout_create(server.scene, server.output_layout);
+    server.scene_layout = wlr_scene_attach_output_layout(server.scene, server.output_layout);
 
     /* 多工作区 */
     for (int i = 0; i < WORKSPACE_COUNT; i++) {
@@ -729,7 +730,7 @@ int main(int argc, char *argv[]) {
     float bg[4]; nui_colorf(NUI_SURFACE_0, bg);
     wlr_scene_set_background_color(server.scene, bg);
 
-    wlr_compositor_create(server.display, server.renderer);
+    wlr_compositor_create(server.display, WLR_COMPOSITOR_VERSION, server.renderer);
     wlr_data_device_manager_create(server.display);
     server.xdg_shell = wlr_xdg_shell_create(server.display);
     server.layer_shell = wlr_layer_shell_v1_create(server.display);
